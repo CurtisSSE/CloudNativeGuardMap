@@ -2,41 +2,61 @@ package main
 
 import (
 	"CloudNativeGuardMap/Azure/Auth"
+	"log"
+	"net/http"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
-// Global variable to store authentication data (in-memory for simplicity)
-var authData azidentity.AuthenticationRecord
-var userToken azcore.TokenCredential
+type AuthState struct {
+	AuthData    azidentity.AuthenticationRecord
+	AccessToken azcore.AccessToken
+}
+
+var (
+	authState AuthState
+)
 
 func main() {
-	r := gin.Default()
-	r.Use(cors.Default())
 
-	// Endpoint to trigger authentication on 'Authenticate' click.
-	r.POST("/auth-login", func(c *gin.Context) {
-		authData, _ = Auth.AuthN() // Authenticate and store the result globally.
-		c.JSON(http.StatusOK, gin.H{"result": authData})
+	// Router definition, CORS configuration.
+	siteRouter := gin.Default()
+	siteCorsConfig := cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowMethods:     []string{"GET", "POST"},
+		AllowHeaders:     []string{"Content-Type"},
+		AllowCredentials: true,
+	}
+	siteRouter.Use(cors.New(siteCorsConfig))
+
+	// Authentication POST requests.
+	siteRouter.POST("/auth-login", func(c *gin.Context) {
+		userData, accessToken := Auth.AuthN()
+		authState.AuthData = userData
+		authState.AccessToken = accessToken
+		c.JSON(http.StatusOK, gin.H{"user": authState.AuthData})
 	})
 
-	r.POST("/auth-logout", func(c *gin.Context) {
-		Auth.AuthNLogOut()
-		c.JSON(http.StatusOK, gin.H{"result": nil})
+	siteRouter.POST("/auth-logout", func(c *gin.Context) {
+		userData, accessToken := Auth.AuthNLogOut()
+		authState.AuthData = userData
+		authState.AccessToken = accessToken
+		c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 	})
 
-	// Endpoint to provide authData and userToken after authentication.
-	r.GET("/auth-data", func(c *gin.Context) {
-		sendData := gin.H{
-			"userupn":   authData.Username,
-			"usertoken": userToken,
+	siteRouter.GET("/auth-userdata", func(c *gin.Context) {
+		if authState.AuthData.Username != "" {
+			c.JSON(http.StatusOK, gin.H{"userupn": authState.AuthData.Username})
+		} else {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not logged in"})
 		}
-		c.JSON(http.StatusOK, sendData)
 	})
 
-	// Start the server
-	r.Run(":8080")
+	// Error handling, start the server.
+	if err := siteRouter.Run(":8080"); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }
