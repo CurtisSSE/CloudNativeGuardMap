@@ -1,7 +1,6 @@
 <script lang="ts">
 	import '../app.css';
     import { loggedInUser } from '../stores/logindata.js';
-    import { redirect } from '@sveltejs/kit'
  
     let { children } = $props();
 </script>

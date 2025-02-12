@@ -1,14 +1,16 @@
 <script lang="ts">
-    import { goto } from "$app/navigation";
+    import { goto } from '$app/navigation';
     import { loggedInUser } from "../../stores/logindata.js";
     
     async function azureLogout() {
-        const response = await fetch('http://localhost:8080/auth-logout', { method: 'POST' });
+        const response = await fetch('http://localhost:5000/auth-logout', { method: 'POST' });
         if (response.ok) {
             await response.json()
+            goto('/login')
+            loggedInUser.update(() => 'abstract random penguin ceaser')
             loggedInUser.set('')
+            
         }
-        goto('/login')
     }
 </script>
 
