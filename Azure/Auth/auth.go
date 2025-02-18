@@ -9,6 +9,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity/cache"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/advisor/armadvisor"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 )
 
@@ -16,6 +17,11 @@ type AuthState struct {
 	AuthData    azidentity.AuthenticationRecord
 	AccessToken azcore.AccessToken
 	LoggedIn    bool
+}
+
+type AdvisorClientFactoryState struct {
+	AdvisorFactoryClient         *armadvisor.SuppressionsClient
+	AdvisorFactoryClientLoggedIn bool
 }
 
 type SubscriptionsClientFactoryState struct {
@@ -29,6 +35,7 @@ var (
 	BrowserCreds                     *azidentity.InteractiveBrowserCredential
 	CurrentAuthState                 AuthState
 	CurrentSubscriptionsFactoryState SubscriptionsClientFactoryState
+	CurrentAdvisorFactoryState       AdvisorClientFactoryState
 )
 
 // CurrentAuthState internal variables.
@@ -69,14 +76,28 @@ func AuthNLogOut() {
 	CurrentAuthState.AuthData = authData
 	CurrentAuthState.AccessToken = accessToken
 	CurrentAuthState.LoggedIn = false
+	CurrentSubscriptionsFactoryState.SubscriptionsFactoryClient = nil
+	CurrentSubscriptionsFactoryState.SubscriptionsFactoryClientLoggedIn = false
+	CurrentAdvisorFactoryState.AdvisorFactoryClient = nil
+	CurrentAdvisorFactoryState.AdvisorFactoryClientLoggedIn = false
 }
 
 func BuildArmSubscriptionsClientFactory(tokencreds azcore.TokenCredential) {
 	clientFactory, err := armsubscriptions.NewClientFactory(tokencreds, nil)
 	if err != nil {
-		fmt.Println("Could not login. Please try again.")
+		fmt.Println("Could not build new authentication for armsubscriptions client factory.")
 		CurrentSubscriptionsFactoryState.SubscriptionsFactoryClientLoggedIn = false
 	}
 	CurrentSubscriptionsFactoryState.SubscriptionsFactoryClient = clientFactory.NewClient()
 	CurrentSubscriptionsFactoryState.SubscriptionsFactoryClientLoggedIn = true
+}
+
+func BuildArmAdvisorClientFactory(subscriptionid string, tokencreds azcore.TokenCredential) {
+	clientFactory, err := armadvisor.NewClientFactory(subscriptionid, tokencreds, nil)
+	if err != nil {
+		fmt.Println("Could not build new authentication for armadvisor client factory.")
+		CurrentAdvisorFactoryState.AdvisorFactoryClientLoggedIn = false
+	}
+	CurrentAdvisorFactoryState.AdvisorFactoryClient = clientFactory.NewSuppressionsClient()
+	CurrentAdvisorFactoryState.AdvisorFactoryClientLoggedIn = true
 }

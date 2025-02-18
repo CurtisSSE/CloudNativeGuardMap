@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-    import { loggedInUser } from '../stores/logindata.js';
+    import { loggedInUser, selectedSubscription } from '../stores/logindata.js';
  
     let { children } = $props();
 </script>
@@ -23,9 +23,10 @@
     </span>
 
     <!-- Right Section: Logged-In Info -->
-    <div class="flex items-center justify-end w-48">
+    <div class="flex items-center justify-end ">
         {#if $loggedInUser != ''}
-            <p class="text-sm font-medium text-gray-300">Logged in as: {$loggedInUser}</p>
+            <p class="text-sm font-medium text-gray-300 p-4">Logged in as: {$loggedInUser}</p>
+            <p class="text-sm font-medium text-gray-300 p-4">Azure Subscription: {$selectedSubscription}</p>
         {/if}
     </div>
 </div>

@@ -30,7 +30,7 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 	})
 
-	siteRouter.POST("/get-subscriptions", func(c *gin.Context) {
+	siteRouter.POST("/subscriptions-auth", func(c *gin.Context) {
 		if !Auth.CurrentAuthState.LoggedIn {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not logged in"})
 		} else {
@@ -38,14 +38,26 @@ func main() {
 			if Auth.CurrentSubscriptionsFactoryState.SubscriptionsFactoryClient == nil {
 				log.Fatal("ARMSubscriptionsFactoryClient not properly initialized (nil)")
 			} else {
-				var output string
+				var subscriptions []string
+				var format string
 				currentsubscriptions := Subscription.GetAllSubscriptions(Auth.CurrentSubscriptionsFactoryState.SubscriptionsFactoryClient)
 				for key, value := range currentsubscriptions {
-					output += "Subscription ID: " + key + "| Subscription Name: " + value
+					format = key + " | " + value
+					subscriptions = append(subscriptions, format)
 				}
-				fmt.Println(output)
-				c.JSON(http.StatusOK, gin.H{"output": output})
+				fmt.Println(subscriptions)
+				c.JSON(http.StatusOK, gin.H{"output": subscriptions})
 			}
+		}
+	})
+
+	siteRouter.POST("/advisor-auth", func(c *gin.Context) {
+		if !Auth.CurrentAuthState.LoggedIn {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not logged in"})
+		} else {
+			var subidData string
+			c.JSON(http.StatusOK, gin.H{"output": "received subscription ID:" + subidData})
+			Auth.BuildArmAdvisorClientFactory(subidData, Auth.SharedCreds)
 		}
 	})
 
