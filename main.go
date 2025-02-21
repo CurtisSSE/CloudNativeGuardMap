@@ -54,11 +54,21 @@ func main() {
 	siteRouter.POST("/advisor-auth", func(c *gin.Context) {
 		if !Auth.CurrentAuthState.LoggedIn {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not logged in"})
-		} else {
-			var subidData string
-			c.JSON(http.StatusOK, gin.H{"output": "received subscription ID:" + subidData})
-			Auth.BuildArmAdvisorClientFactory(subidData, Auth.SharedCreds)
+			return
 		}
+
+		var requestData struct {
+			subidData string `json:"subscriptionid"`
+		}
+
+		if err := c.ShouldBindJSON(&requestData); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Request invalid"})
+			return
+		}
+
+		subiddataTransfer := requestData.subidData
+		c.JSON(http.StatusOK, gin.H{"subid": subiddataTransfer})
+		Auth.BuildArmAdvisorClientFactory(subiddataTransfer, Auth.SharedCreds)
 	})
 
 	// Error handling, start the server.

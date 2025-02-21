@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { loggedInUser, existingSubscriptions, subscriptionButtonState, selectedSubscription, subscriptionIsSelectedState, threatModelGeneratedState} from "../stores/logindata.js";
+    import { loggedInUser, existingSubscriptions, subscriptionButtonState, selectedSubscription, subscriptionIsSelectedState, threatModelGeneratedState, subidfromGin} from "../stores/logindata.js";
 
     // Primary Azure SubscriptionsFactoryClient auth handler and returns list of subscriptions for logged in user's tenant.
     async function azureStartSubscriptionsAuth() {
@@ -15,14 +15,16 @@
     }
 
     // Authentication handler for additional auths required for diagram, such as ARMAdvisor Client Factory.
+    // NEEDS WORK
     async function azureStartAdditionalAuths(subscriptionid:string) {
-            await fetch("http://localhost:5000/advisor-auth", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(subscriptionid)
+        const response = await fetch("http://localhost:5000/advisor-auth", {method: "POST", headers: { "Content-Type": "application/json"}, 
+        body: JSON.stringify({ subidData: subscriptionid })
         });
+        if (response.ok) {
+            let responsetext = await response.json();
+            let responsetextfromGin = responsetext.subid;
+            subidfromGin.set(responsetextfromGin);
+        }
     }
 
     // Sets the Azure subscription state amongst Svelte stores and other components.
@@ -41,7 +43,6 @@
 
     function azureSetThreatModel() {
         $threatModelGeneratedState = true;
-        goto('/');
     }
 
     function azureReleaseThreatModel() {
@@ -70,11 +71,12 @@
     {/snippet}
 
     {#snippet startRenderThreatModelSnippet()}
-        <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" on:click={() => { azureStartAdditionalAuths($selectedSubscription); azureSetThreatModel; }}>Start Threat Model generation</button>
+        <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" on:click={() => { azureStartAdditionalAuths($selectedSubscription); azureSetThreatModel(); }}>Start Threat Model generation</button>
     {/snippet}
 
     {#snippet displayThreatModelSnippet()}
         <p>Under construction</p>
+        <p>{$subidfromGin}</p>
     {/snippet}
 
     <!-- If the user is logged in and a subscription is not selected. -->

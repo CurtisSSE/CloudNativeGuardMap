@@ -2,6 +2,7 @@ import { writable } from 'svelte/store';
 
 export const loggedInUser = writable('');
 export const selectedSubscription = writable('');
+export const subidfromGin = writable('');
 
 export const existingSubscriptions = writable<string[]>([]);
 
