@@ -20,8 +20,9 @@ type AuthState struct {
 }
 
 type AdvisorClientFactoryState struct {
-	AdvisorFactoryClient         *armadvisor.SuppressionsClient
-	AdvisorFactoryClientLoggedIn bool
+	AdvisorFactorySuppressionsClient    *armadvisor.SuppressionsClient
+	AdvisorFactoryRecommendationsClient *armadvisor.RecommendationsClient
+	AdvisorFactoryClientLoggedIn        bool
 }
 
 type SubscriptionsClientFactoryState struct {
@@ -78,7 +79,8 @@ func AuthNLogOut() {
 	CurrentAuthState.LoggedIn = false
 	CurrentSubscriptionsFactoryState.SubscriptionsFactoryClient = nil
 	CurrentSubscriptionsFactoryState.SubscriptionsFactoryClientLoggedIn = false
-	CurrentAdvisorFactoryState.AdvisorFactoryClient = nil
+	CurrentAdvisorFactoryState.AdvisorFactorySuppressionsClient = nil
+	CurrentAdvisorFactoryState.AdvisorFactoryRecommendationsClient = nil
 	CurrentAdvisorFactoryState.AdvisorFactoryClientLoggedIn = false
 }
 
@@ -98,6 +100,7 @@ func BuildArmAdvisorClientFactory(subscriptionid string, tokencreds azcore.Token
 		fmt.Println("Could not build new authentication for armadvisor client factory.")
 		CurrentAdvisorFactoryState.AdvisorFactoryClientLoggedIn = false
 	}
-	CurrentAdvisorFactoryState.AdvisorFactoryClient = clientFactory.NewSuppressionsClient()
+	CurrentAdvisorFactoryState.AdvisorFactorySuppressionsClient = clientFactory.NewSuppressionsClient()
+	CurrentAdvisorFactoryState.AdvisorFactoryRecommendationsClient = clientFactory.NewRecommendationsClient()
 	CurrentAdvisorFactoryState.AdvisorFactoryClientLoggedIn = true
 }
