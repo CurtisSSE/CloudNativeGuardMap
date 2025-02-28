@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { existingSubscriptions, loggedInUser, selectedSubscription, subscriptionButtonState, subscriptionIsSelectedState } from "../../stores/logindata.js";
+    import { existingSubscriptions, loggedInUser, selectedSubscriptionID, selectedSubscriptionName, subscriptionButtonState, subscriptionIsSelectedState } from "../../stores/logindata.js";
     
     async function azureLogout() {
         const response = await fetch('http://localhost:5000/auth-logout', { method: 'POST' });
@@ -10,10 +10,12 @@
             loggedInUser.set('');
             existingSubscriptions.update(() => ['abstract', 'random', 'penguin' , 'caesar']);
             existingSubscriptions.set(['']);
-            selectedSubscription.set('abstract random penguin caesar');
-            selectedSubscription.set('');
-            $subscriptionButtonState = false;
-            $subscriptionIsSelectedState = false;
+            selectedSubscriptionName.set('abstract random penguin caesar');
+            selectedSubscriptionName.set('');
+            selectedSubscriptionID.set('');
+            selectedSubscriptionID.set('');
+            subscriptionButtonState.set(false);
+            subscriptionIsSelectedState.set(false);
             goto('/login');            
         }
     }
