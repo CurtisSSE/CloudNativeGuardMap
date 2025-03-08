@@ -34,6 +34,8 @@ jobs:
     runs-on: ubuntu-latest # For Linux, use ubuntu-latest
     environment: dev
     steps:
+    - name: Azure Login
+      uses: Azure/login@v2.2.0
     - name: 'Checkout GitHub Action'
       uses: actions/checkout@v4
 
