@@ -9,7 +9,10 @@
     import { existingSubscriptions, subscriptionButtonState, selectedSubscriptionName, selectedSubscriptionID, subscriptionIsSelectedState } from "../stores/logindata.js";
     // Svelte stores for Advisor.
     import { existingRecommendations, advisorRecommendationsGeneratedState, recName, recID, shortDesc, shortSol, longDesc, actionsDesc, actionsType, actionsCaption, actionsLink, actionsMetaID, impactfromAlert, impactedField, impactedValue, potentialBenefits } from "../stores/logindata.js";
-   
+    // Svelte stores for button states.
+    import { expandedAdvisorButtonIdx } from "../stores/logindata.js"
+
+
     // General variables.
     const splitVar = " | "
     const bogusText = "abstract random penguin caesar"
@@ -17,6 +20,11 @@
     // General states.
     let recExpandButton = $state(false);
     let zeroRecs = $state(false);
+
+    // Alert toggle states.
+    function toggleAlertExpand(idx: any) {
+        $expandedAdvisorButtonIdx = expandedAdvisorButtonIdx === idx ? null : idx;
+    }
 
 
     // Primary Azure SubscriptionsFactoryClient auth handler and returns list of subscriptions for logged in user's tenant.
@@ -197,16 +205,55 @@
         <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => {azureRecButtonHandler()}}>Close Recommendations</button><br/>
         {#each $recName as _, i}
         <br/>
-        <p class="font-bold">Alert Number:</p> {i+1}
-        <p class="font-bold">Summary:</p> {$shortDesc[i]}
-        <p class="font-bold">Alert ID:</p> {$recName[i]}
-        <p class="font-bold">Resource:</p> {$recID[i]}
-        <p class="font-bold">Risk Type:</p> {$impactfromAlert[i]}
-        <p class="font-bold">Severity:</p> {$impactedField[i]}
-        <p class="font-bold">Resource Type:</p> {$impactedValue[i]}
-        <p class="font-bold">Long Description:</p> {$longDesc[i]}
-        <p class="font-bold">Potential Benefits:</p> {$potentialBenefits[i]}
-        <br/><br/>
+        <div class="my-3">
+            <button class="p-4 rounded-lg border border-gray-300 bg-white shadow-sm cursor-pointer hover: bg-gray-50 transition-colors flex justify-between items-center" onclick={() => toggleAlertExpand(i)}>
+                <div class="flex items-center space-x-3">
+                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-md font-medium">Alert #{i+1}</span>
+                    <span class="text-gray-700 font-medium">{$shortDesc[i]} | Severity: </span>
+                </div>
+                <span class="px-2 py-1 rounded-md text-sm font-medium"
+                    class:bg-red-100={$impactedField[i] === 'High'}
+                    class:text-red-800={$impactedField[i] === 'High'}
+                    class:bg-yellow-100={$impactedField[i] === 'Medium'}
+                    class:text-yellow-800={$impactedField[i] === 'Medium'}
+                    class:bg-green-100={$impactedField[i] === 'Low'}
+                    class:text-green-800={$impactedField[i] === 'Low'}>
+                    {$impactedField[i]}
+                </span>
+            </button>
+
+            {#if $expandedAdvisorButtonIdx === i}
+            <div class="mt-1 p-5 rounded-b-lg border border-t-0 border-gray-300 bg-white shadow-sm animate-expandVertical">
+                <div class="grid grid-cols-1 gap-3">
+                    <div class="flex">
+                        <p class="font-bold w-40">Alert ID:</p>
+                        <span class="text-gray-700 font-mono">{$recName[i]}</span>
+                    </div>
+                    <div class="flex">
+                        <p class="font-bold w-40">Resource:</p>
+                        <span class="text-gray-700">{$recID[i]}</span>
+                    </div>
+                    <div class="flex">
+                        <p class="font-bold w-40">Risk Type:</p>
+                        <span class="text-gray-700">{$impactfromAlert[i]}</span>
+                    </div>
+                    <div class="flex">
+                        <p class="font-bold w-40">Resource Type:</p>
+                        <span class="text-gray-700">{$impactedValue[i]}</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <p class="font-bold mb-1">Long Description:</p>
+                        <p class="text-gray-700 bg-gray-50 p-3 rounded">{$longDesc[i]}</p>
+                    </div>
+                    <div class="flex flex-col">
+                        <p class="font-bold mb-1">Potential Benefits:</p>
+                        <p class="text-gray-700 bg-blue-50 p-3 rounded">{$potentialBenefits[i]}</p>
+                    </div>
+                </div>
+                <br/><br/>
+            </div>
+            {/if}
+        </div>
         {/each}
         {:else if recExpandButton == false}
         <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => {azureSetAdvisorRecommendations($existingRecommendations); azureRecButtonHandler()}}>Expand Recommendations</button>

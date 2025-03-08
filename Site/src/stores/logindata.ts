@@ -1,16 +1,21 @@
 import { writable } from 'svelte/store';
 
+// User login states
 export const loggedInUser = writable('');
 
+// Subscription selected main states
 export const selectedSubscriptionName = writable('');
 export const selectedSubscriptionID = writable('');
 export const subidfromGin = writable('');
 
+// Subscription feedback from Gin backend
 export const existingSubscriptions = writable<string[]>([]);
 
+// Subscription states
 export const subscriptionButtonState = writable<boolean>(false);
 export const subscriptionIsSelectedState = writable<boolean>(false);
 
+// Threat Model states
 export const threatModelGeneratedState = writable<boolean>(false);
 
 // Azure Advisor recommendation variables
@@ -30,3 +35,6 @@ export const impactfromAlert = writable<string[]>([]);
 export const impactedField = writable<string[]>([]);
 export const impactedValue = writable<string[]>([]);
 export const potentialBenefits = writable<string[]>([]);
+
+// Azure Advisor recommendation states
+export const expandedAdvisorButtonIdx = writable<number | null>(null);
