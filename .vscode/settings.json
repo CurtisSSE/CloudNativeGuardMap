@@ -1,4 +1,8 @@
 {
     "appService.defaultWebAppToDeploy": "/subscriptions/cbabaf16-ddfb-4918-8d93-8fdab391cc63/resourceGroups/cngmdev/providers/Microsoft.Web/sites/cngm",
-    "appService.deploySubpath": "."
+    "appService.deploySubpath": "/Site",
+    "appService.zipIgnorePattern": [
+        "node_modules{,/**}",
+        ".vscode{,/**}"
+    ]
 }
