@@ -13,6 +13,7 @@ import (
 )
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
 	// Router definition, CORS configuration.
 	siteRouter := gin.Default()
 	siteCorsConfig := cors.DefaultConfig()
