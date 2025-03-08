@@ -89,7 +89,7 @@ func main() {
 	})
 
 	// Error handling, start the server.
-	if err := siteRouter.Run(":8080"); err != nil {
+	if err := siteRouter.Run(":5000"); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
