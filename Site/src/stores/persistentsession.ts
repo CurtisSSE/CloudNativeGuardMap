@@ -46,4 +46,5 @@ export const zeroRecs = writable<boolean>(false);
 export const existingResources = writable<string[]>([]);
 export const resourcesGeneratedState = writable<boolean>(false);
 
-// Threat Model 
+// Threat Model variables
+export const threatModelDrawing = writable<HTMLCanvasElement>(undefined);

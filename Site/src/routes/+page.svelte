@@ -2,9 +2,9 @@
     // Svelte tick functionality for dom re-rendering.
     import { tick } from "svelte";
     // Svelte stores for logged in user related variables.
-    import { loggedInUser, threatModelButtonState } from "../stores/persistentsession.js";
+    import { loggedInUser } from "../stores/persistentsession.js";
     // Svelte stores for threat model related variables.
-    import { threatModelGeneratedState } from "../stores/persistentsession.js";
+    import { threatModelGeneratedState, threatModelButtonState, threatModelDrawing} from "../stores/persistentsession.js";
     // Svelte stores for Resources.
     import { existingResources, resourcesGeneratedState } from "../stores/persistentsession.js";
     // Svelte stores for Subscriptions.
@@ -14,8 +14,7 @@
     // Svelte stores for button states.
     import { expandedAdvisorButtonIdx } from "../stores/persistentsession.js"
 
-
-    // Helper variables variables.
+    // Helper variables.
     const splitVar = " | "
     const bogusText = "abstract random penguin caesar"
 
@@ -204,6 +203,24 @@
         await tick();
     }
 
+    async function generateThreatModel() {
+        await azureResourcesRequest();
+        const vmName = $existingResources[0][0]
+        var ele: HTMLCanvasElement = document.getElementById("vm1") as HTMLCanvasElement;
+        var ctx = ele.getContext("2d")
+        ctx?.beginPath();
+        ctx?.arc(95, 50, 40, 0, 2 * Math.PI);
+        ctx?.stroke();
+        if (ctx) {
+            ctx.font = "16px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "black";
+            ctx.fillText(vmName, 95, 50);
+        }
+        threatModelDrawing.set(ele);
+    }
+
 
 </script>
 
@@ -234,6 +251,11 @@
     {#snippet startResourcesSnippet()}
         <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => { azureToggleResourcesState(); azureResourcesRequest();}}>Check Azure Resources</button>
     {/snippet}
+
+    {#snippet startThreatModelSnippet()}
+    <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => { azureToggleThreatModelState(); generateThreatModel();}}>Generate Threat Model</button>
+    {/snippet}
+
 
     {#snippet displayAdvisorRecommendationsSnippet()}
         <center><br/>
@@ -309,8 +331,9 @@
     </center>
     {/snippet}
 
+    <!-- Important snippet, generates the threat model based on returned resource variables like VMs and Network Interfaces drawn using the HTML5 canvas. -->
     {#snippet generateThreatModelSnippet()}
-    
+    {$threatModelDrawing}
     {/snippet}
 
 
@@ -325,22 +348,26 @@
     {@render eachAvailableAzureSubscriptionsSnippet()}
     </center>
     <!-- If the user is logged in and has selected a subscription. -->
-    {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == false && $resourcesGeneratedState == false}
+    {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == false && $resourcesGeneratedState == false && $threatModelGeneratedState == false}
     <center>
     {@render selectedSubscriptionSnippet()}<br/><br/>
     {@render changeSelectedSubscriptionSnippet()}<br/><br/>
     {@render startAdvisorRecommendationsSnippet()}<br/><br/>
     {@render startResourcesSnippet()}
+    {@render startThreatModelSnippet()}
     </center>
 
     <!-- If the user is logged in, has selected a subscription and has selected to generate security advisor recommendations. -->
-    {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == true && $resourcesGeneratedState == false}
+    {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == true && $resourcesGeneratedState == false && $threatModelGeneratedState == false}
     {@render displayAdvisorRecommendationsSnippet()}
 
 
     <!-- If the user is logged in, has selected a subscription and has selected to display resources in their subscription. -->
-    {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == false && $resourcesGeneratedState == true}
+    {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == false && $resourcesGeneratedState == true && $threatModelGeneratedState == false}
     {@render displayResourcesSnippet()}
+
+    {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == false && $resourcesGeneratedState == false && $threatModelGeneratedState == true}
+    {@render generateThreatModelSnippet()}
 
     <!-- If the user is not logged in. -->
     {:else if $loggedInUser == ''}
