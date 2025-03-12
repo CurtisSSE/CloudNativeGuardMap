@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { loggedInUser } from "../../stores/logindata.js";
+    import { loggedInUser } from "../../stores/persistentsession.js";
 
 
     async function azureLogin() {

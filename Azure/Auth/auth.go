@@ -10,6 +10,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity/cache"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/advisor/armadvisor"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resourcegraph/armresourcegraph"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 )
 
@@ -30,6 +31,12 @@ type SubscriptionsClientFactoryState struct {
 	SubscriptionsFactoryClientLoggedIn bool
 }
 
+type ResourceClientFactoryState struct {
+	ResourceFactoryClient                *armresourcegraph.Client
+	ResourceFactoryClientLoggedIn        bool
+	ResourceFactoryCurrentSubscriptionID string
+}
+
 // Shared Azure identity states across packages and main.
 var (
 	SharedCreds                      azcore.TokenCredential
@@ -37,6 +44,7 @@ var (
 	CurrentAuthState                 AuthState
 	CurrentSubscriptionsFactoryState SubscriptionsClientFactoryState
 	CurrentAdvisorFactoryState       AdvisorClientFactoryState
+	CurrentResourceGraphFactoryState ResourceClientFactoryState
 )
 
 // CurrentAuthState internal variables.
@@ -44,8 +52,6 @@ var (
 	authData    azidentity.AuthenticationRecord
 	accessToken azcore.AccessToken
 )
-
-// CurrentARMSubscriptionsFactoryState internal variables.
 
 /* Authentication using the azidentity library (AuthenticationRecord) only returns non-secret account information as strings,
 so byte manipulation, zeroing and so forth need not be considered for this particular data.*/
@@ -103,4 +109,14 @@ func BuildArmAdvisorClientFactory(subscriptionid string, tokencreds azcore.Token
 	CurrentAdvisorFactoryState.AdvisorFactorySuppressionsClient = clientFactory.NewSuppressionsClient()
 	CurrentAdvisorFactoryState.AdvisorFactoryRecommendationsClient = clientFactory.NewRecommendationsClient()
 	CurrentAdvisorFactoryState.AdvisorFactoryClientLoggedIn = true
+}
+
+func BuildArmResourceGraphClientFactory(subscriptionid string, tokencreds azcore.TokenCredential) {
+	clientFactory, err := armresourcegraph.NewClientFactory(tokencreds, nil)
+	if err != nil {
+		fmt.Println("Could not build new authentication for armresourcegraph client factory.")
+		CurrentResourceGraphFactoryState.ResourceFactoryClientLoggedIn = false
+	}
+	CurrentResourceGraphFactoryState.ResourceFactoryClient = clientFactory.NewClient()
+	CurrentResourceGraphFactoryState.ResourceFactoryClientLoggedIn = true
 }

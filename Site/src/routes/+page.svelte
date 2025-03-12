@@ -1,31 +1,28 @@
 <script lang="ts">
     // Svelte tick functionality for dom re-rendering.
-     import { tick } from "svelte";
+    import { tick } from "svelte";
     // Svelte stores for logged in user related variables.
-    import { loggedInUser } from "../stores/logindata.js";
+    import { loggedInUser, threatModelButtonState } from "../stores/persistentsession.js";
     // Svelte stores for threat model related variables.
-    import { threatModelGeneratedState } from "../stores/logindata.js";
+    import { threatModelGeneratedState } from "../stores/persistentsession.js";
+    // Svelte stores for Resources.
+    import { existingResources, resourcesGeneratedState } from "../stores/persistentsession.js";
     // Svelte stores for Subscriptions.
-    import { existingSubscriptions, subscriptionButtonState, selectedSubscriptionName, selectedSubscriptionID, subscriptionIsSelectedState } from "../stores/logindata.js";
+    import { existingSubscriptions, subscriptionButtonState, selectedSubscriptionName, selectedSubscriptionID, subscriptionIsSelectedState } from "../stores/persistentsession.js";
     // Svelte stores for Advisor.
-    import { existingRecommendations, advisorRecommendationsGeneratedState, recName, recID, shortDesc, shortSol, longDesc, actionsDesc, actionsType, actionsCaption, actionsLink, actionsMetaID, impactfromAlert, impactedField, impactedValue, potentialBenefits } from "../stores/logindata.js";
+    import { recExpandButton, zeroRecs, existingRecommendations, advisorRecommendationsGeneratedState, recName, recID, shortDesc, shortSol, longDesc, actionsDesc, actionsType, actionsCaption, actionsLink, actionsMetaID, impactfromAlert, impactedField, impactedValue, potentialBenefits } from "../stores/persistentsession.js";
     // Svelte stores for button states.
-    import { expandedAdvisorButtonIdx } from "../stores/logindata.js"
+    import { expandedAdvisorButtonIdx } from "../stores/persistentsession.js"
 
 
-    // General variables.
+    // Helper variables variables.
     const splitVar = " | "
     const bogusText = "abstract random penguin caesar"
 
-    // General states.
-    let recExpandButton = $state(false);
-    let zeroRecs = $state(false);
-
-    // Alert toggle states.
+    // Recommendations alert toggle states.
     function toggleAlertExpand(idx: any) {
         $expandedAdvisorButtonIdx = expandedAdvisorButtonIdx === idx ? null : idx;
     }
-
 
     // Primary Azure SubscriptionsFactoryClient auth handler and returns list of subscriptions for logged in user's tenant.
     async function azureStartSubscriptionsAuth() {
@@ -59,9 +56,37 @@
             let recs = await response.json();
             let recommendationsFromGin = recs.output;
             existingRecommendations.update(($existingRecommendations) => [...$existingRecommendations, ...recommendationsFromGin]);
-        };
+            };
         })
         await tick();
+    }
+
+    async function azureStartResourcesAuth(subscriptionid: string) {
+        await fetch("http://localhost:5000/resources-auth", {method: "POST", headers: { "Content-Type": "application/json"},
+        body: JSON.stringify({ subscriptionid })
+        }).then(async (response) => {
+            if (response.ok) {
+                let subid = await response.json();
+                return subid.output;
+            };
+        })
+        await tick();
+    }
+
+    async function azureResourcesRequest() {
+        azureReleaseResources();
+        await fetch("http://localhost:5000/resources-request", {method: "POST"}).then(async (response) => {
+            if (response.ok) {
+            let resources = await response.json();
+            let resourcesFromGin = resources.output;
+            existingResources.update(($existingResources) => [...$existingResources, ...resourcesFromGin])
+            };
+        })
+        await tick();
+    }
+
+    async function azureReleaseResources() {
+        existingResources.set([]);
     }
 
     // Sets the Azure subscription state amongst Svelte stores and other components.
@@ -91,21 +116,23 @@
         await tick();
     }
 
-    async function azureSetThreatModel() {
-    }
-
-    async function azureReleaseThreatModel() {
+    async function azureToggleThreatModelState() {
+        if ($threatModelGeneratedState == true) {
+            threatModelGeneratedState.set(false);
+        } else {
+            threatModelGeneratedState.set(true);
+        }
+        await tick();
     }
 
     async function azureSetAdvisorRecommendations(recommendations: string[]) {
-        zeroRecs = false;
         await azureReleaseAdvisorRecommendations();
         await azureAdvisorRequest();
         if ($existingRecommendations.length > 0) {
-            zeroRecs = false;
+            $zeroRecs = false;
             for (let i = 0; i < recommendations.length; i++) {
                 const advisorsections = recommendations[i].split(splitVar);
-                if (advisorsections[10] == 'Security') {
+                //if (advisorsections[10] == 'Security') {
                     recName.update(($recName) => [...$recName, advisorsections[0]]);
                     recID.update(($recID) => [...$recID, advisorsections[1].split('/providers/Microsoft.Advisor/rec')[0]]);
                     shortDesc.update(($shortDesc) => [...$shortDesc, advisorsections[2]]);
@@ -120,19 +147,19 @@
                     impactedField.update(($impactedField) => [...$impactedField, advisorsections[11]]);
                     impactedValue.update(($impactedValue) => [...$impactedValue, advisorsections[12]]);
                     potentialBenefits.update(($potentialBenefits) => [...$potentialBenefits, advisorsections[13]]);
-                } else {
-                    continue
-                }
+                //} else {
+                    //continue
+                //}
             }
         } else {
-            zeroRecs = true;
+            $zeroRecs = true;
         }
         await tick();
     }
 
     async function azureReleaseAdvisorRecommendations() {
-        zeroRecs = true;
-        existingRecommendations.set([]);
+        $zeroRecs = true;
+        $existingRecommendations = [];
         recName.set([]);
         recID.set([]);
         shortDesc.set([]);
@@ -160,10 +187,19 @@
     }
 
     async function azureRecButtonHandler() {
-        if (recExpandButton == false) {
-            recExpandButton = true
+        if ($recExpandButton == false) {
+            $recExpandButton = true
         } else {
-            recExpandButton = false
+            $recExpandButton = false
+        }
+        await tick();
+    }
+
+    async function azureToggleResourcesState() {
+        if ($resourcesGeneratedState == true) {
+            resourcesGeneratedState.set(false);
+        } else {
+            resourcesGeneratedState.set(true);
         }
         await tick();
     }
@@ -183,25 +219,29 @@
     {#snippet eachAvailableAzureSubscriptionsSnippet()}
         <p class="font-bold">Choose an Azure subscription:</p>
         {#each $existingSubscriptions as subscriptions}
-        <br/><button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => {azureSetSubscription(subscriptions.split(splitVar)[1], subscriptions.split(splitVar)[0]); azureStartAdvisorAuths($selectedSubscriptionID); azureToggleSubscriptionState()}}>{subscriptions}</button><br/>
+        <br/><button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => {azureSetSubscription(subscriptions.split(splitVar)[1], subscriptions.split(splitVar)[0]); azureStartAdvisorAuths($selectedSubscriptionID); azureStartResourcesAuth($selectedSubscriptionID); azureToggleSubscriptionState()}}>{subscriptions}</button><br/>
         {/each}
     {/snippet}
 
     {#snippet changeSelectedSubscriptionSnippet()}
-        <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => {azureReleaseSubscription(); azureReleaseThreatModel(); azureReleaseAdvisorRecommendations(); azureToggleSubscriptionState()}}>Change Subscription</button>
+        <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => {azureReleaseSubscription(); azureToggleThreatModelState(); azureReleaseAdvisorRecommendations(); azureToggleSubscriptionState()}}>Change Subscription</button>
     {/snippet}
 
     {#snippet startAdvisorRecommendationsSnippet()}
-        <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => {azureToggleAdvisorState()}}>Check Azure Advisor security recommendations</button>
+        <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => { azureToggleAdvisorState(); azureSetAdvisorRecommendations($existingRecommendations);}}>Check Azure Advisor security recommendations</button>
+    {/snippet}
+
+    {#snippet startResourcesSnippet()}
+        <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => { azureToggleResourcesState(); azureResourcesRequest();}}>Check Azure Resources</button>
     {/snippet}
 
     {#snippet displayAdvisorRecommendationsSnippet()}
         <center><br/>
         <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => {azureReleaseAdvisorRecommendations(); azureToggleAdvisorState() }}>Cancel and return to menu</button><br/><br/>
         <p class="font-semibold">Azure Security Posture Recommendations:</p><br/>
-        {#if recExpandButton == true && zeroRecs == true}
+        {#if $recExpandButton == true && $zeroRecs == true}
         <p>No security recommendations available for this subscription.</p>
-        {:else if recExpandButton == true && zeroRecs == false}
+        {:else if $recExpandButton == true && $zeroRecs == false}
         <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => {azureRecButtonHandler()}}>Close Recommendations</button><br/>
         {#each $recName as _, i}
         <br/>
@@ -241,25 +281,38 @@
                         <p class="font-bold w-40">Resource Type:</p>
                         <span class="text-gray-700">{$impactedValue[i]}</span>
                     </div>
-                    <div class="flex flex-col">
+                    <!--<div class="flex flex-col">
                         <p class="font-bold mb-1">Long Description:</p>
                         <p class="text-gray-700 bg-gray-50 p-3 rounded">{$longDesc[i]}</p>
                     </div>
                     <div class="flex flex-col">
                         <p class="font-bold mb-1">Potential Benefits:</p>
                         <p class="text-gray-700 bg-blue-50 p-3 rounded">{$potentialBenefits[i]}</p>
-                    </div>
+                    </div> -->
                 </div>
                 <br/><br/>
             </div>
             {/if}
         </div>
         {/each}
-        {:else if recExpandButton == false}
+        {:else if $recExpandButton == false}
         <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => {azureSetAdvisorRecommendations($existingRecommendations); azureRecButtonHandler()}}>Expand Recommendations</button>
         {/if}
         </center>
     {/snippet}
+
+    {#snippet displayResourcesSnippet()}
+    <center><br/>
+    <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => {azureReleaseResources(); azureToggleResourcesState() }}>Cancel and return to menu</button><br/><br/>
+    <p class="font-semibold">Azure Resources:</p><br/>
+    {$existingResources}
+    </center>
+    {/snippet}
+
+    {#snippet generateThreatModelSnippet()}
+    
+    {/snippet}
+
 
     <!-- If the user is logged in and a subscription is not selected. -->
     {#if $loggedInUser != '' && $subscriptionButtonState == false}
@@ -271,18 +324,24 @@
     <center>
     {@render eachAvailableAzureSubscriptionsSnippet()}
     </center>
-
     <!-- If the user is logged in and has selected a subscription. -->
-    {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == false}
+    {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == false && $resourcesGeneratedState == false}
     <center>
     {@render selectedSubscriptionSnippet()}<br/><br/>
     {@render changeSelectedSubscriptionSnippet()}<br/><br/>
-    {@render startAdvisorRecommendationsSnippet()}
+    {@render startAdvisorRecommendationsSnippet()}<br/><br/>
+    {@render startResourcesSnippet()}
     </center>
 
     <!-- If the user is logged in, has selected a subscription and has selected to generate security advisor recommendations. -->
-    {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == true}
+    {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == true && $resourcesGeneratedState == false}
     {@render displayAdvisorRecommendationsSnippet()}
+
+
+    <!-- If the user is logged in, has selected a subscription and has selected to display resources in their subscription. -->
+    {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == false && $resourcesGeneratedState == true}
+    {@render displayResourcesSnippet()}
+
     <!-- If the user is not logged in. -->
     {:else if $loggedInUser == ''}
     <div class="text-center">Not logged in. Please log in above to continue.</div>

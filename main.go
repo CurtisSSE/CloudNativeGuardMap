@@ -3,6 +3,7 @@ package main
 import (
 	"CloudNativeGuardMap/Azure/Advisor"
 	"CloudNativeGuardMap/Azure/Auth"
+	"CloudNativeGuardMap/Azure/Compute"
 	"CloudNativeGuardMap/Azure/Subscription"
 	"fmt"
 	"log"
@@ -85,6 +86,39 @@ func main() {
 			}
 			fmt.Println(recommendations)
 			c.JSON(http.StatusOK, gin.H{"output": recommendations})
+		}
+	})
+
+	siteRouter.POST("/resources-auth", func(c *gin.Context) {
+		type jsonResponse struct {
+			SubidData string `json:"subscriptionid"`
+		}
+		var requestData jsonResponse
+		if !Auth.CurrentAuthState.LoggedIn {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not logged in"})
+			return
+		}
+		if err := c.ShouldBindJSON(&requestData); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Request invalid"})
+			return
+		}
+		subiddataTransfer := requestData.SubidData
+		Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID = subiddataTransfer
+		Auth.BuildArmResourceGraphClientFactory(subiddataTransfer, Auth.SharedCreds)
+		c.JSON(http.StatusOK, gin.H{"SubidData": subiddataTransfer})
+	})
+
+	siteRouter.POST("/resources-request", func(c *gin.Context) {
+		if Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient == nil {
+			log.Fatal("ResourceFactoryClient not properly initialized (nil)")
+		} else {
+			currentresources := Compute.GetAllResourceGroups(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
+			fmt.Println(currentresources)
+			var currentreturnedResources Compute.VMtoModel
+			for i := range currentresources {
+				currentreturnedResources.ReturnedVMs = append(currentreturnedResources.ReturnedVMs, currentresources[i])
+			}
+			c.JSON(http.StatusOK, gin.H{"output": currentreturnedResources.ReturnedVMs})
 		}
 	})
 

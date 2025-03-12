@@ -16,6 +16,7 @@ export const subscriptionButtonState = writable<boolean>(false);
 export const subscriptionIsSelectedState = writable<boolean>(false);
 
 // Threat Model states
+export const threatModelButtonState = writable<boolean>(false);
 export const threatModelGeneratedState = writable<boolean>(false);
 
 // Azure Advisor recommendation variables
@@ -38,3 +39,11 @@ export const potentialBenefits = writable<string[]>([]);
 
 // Azure Advisor recommendation states
 export const expandedAdvisorButtonIdx = writable<number | null>(null);
+export const recExpandButton = writable<boolean>(false);
+export const zeroRecs = writable<boolean>(false);
+
+// Azure Resources variables
+export const existingResources = writable<string[]>([]);
+export const resourcesGeneratedState = writable<boolean>(false);
+
+// Threat Model 

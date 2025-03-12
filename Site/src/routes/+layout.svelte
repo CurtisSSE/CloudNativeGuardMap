@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-    import { loggedInUser, selectedSubscriptionName } from '../stores/logindata.js';
+    import { loggedInUser, selectedSubscriptionName } from '../stores/persistentsession.js';
  
     let { children } = $props();
 </script>

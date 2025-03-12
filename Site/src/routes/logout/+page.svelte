@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { existingSubscriptions, loggedInUser, selectedSubscriptionID, selectedSubscriptionName, subscriptionButtonState, subscriptionIsSelectedState } from "../../stores/logindata.js";
+    import { existingSubscriptions, loggedInUser, selectedSubscriptionID, selectedSubscriptionName, subscriptionButtonState, subscriptionIsSelectedState } from "../../stores/persistentsession.js";
     
     async function azureLogout() {
         const response = await fetch('http://localhost:5000/auth-logout', { method: 'POST' });
