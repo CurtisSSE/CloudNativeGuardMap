@@ -40,11 +40,11 @@ export const potentialBenefits = writable<string[]>([]);
 // Azure Advisor recommendation states
 export const expandedAdvisorButtonIdx = writable<number | null>(null);
 export const recExpandButton = writable<boolean>(false);
-export const zeroRecs = writable<boolean>(false);
+export const zeroRecs = writable<boolean>(true);
 
 // Azure Resources variables
 export const existingResources = writable<string[]>([]);
 export const resourcesGeneratedState = writable<boolean>(false);
 
 // Threat Model variables
-export const threatModelDrawing = writable<HTMLCanvasElement>(undefined);
+export const threatModelDrawing = writable<HTMLCanvasElement[]>(undefined);
