@@ -15,10 +15,6 @@ export const existingSubscriptions = writable<string[]>([]);
 export const subscriptionButtonState = writable<boolean>(false);
 export const subscriptionIsSelectedState = writable<boolean>(false);
 
-// Threat Model states
-export const threatModelButtonState = writable<boolean>(false);
-export const threatModelGeneratedState = writable<boolean>(false);
-
 // Azure Advisor recommendation variables
 export const advisorRecommendationsGeneratedState = writable<boolean>(false);
 export const existingRecommendations = writable<string[]>([]);
@@ -46,5 +42,16 @@ export const zeroRecs = writable<boolean>(true);
 export const existingResources = writable<string[]>([]);
 export const resourcesGeneratedState = writable<boolean>(false);
 
-// Threat Model variables
-export const threatModelDrawing = writable<HTMLCanvasElement[]>(undefined);
+// Azure VM states
+export const existingVMs = writable<string[]>([]);
+export const zeroVMs = writable<boolean>(true);
+export const vmNames = writable<string[]>([]);
+export const resGroups = writable<string[]>([]);
+export const operatingSystems = writable<string[]>([]);
+export const adminUsernames = writable<string[]>([]);
+export const networkInterfaces = writable<string[]>([]);
+
+// Threat Model states
+export const threatModelButtonState = writable<boolean>(false);
+export const threatModelGeneratedState = writable<boolean>(false);
+export const threatModelGeneratedActual = writable<boolean>(false);

@@ -109,16 +109,29 @@ func main() {
 	})
 
 	siteRouter.POST("/resources-request", func(c *gin.Context) {
+		//var returnedVMOutputString string
 		if Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient == nil {
 			log.Fatal("ResourceFactoryClient not properly initialized (nil)")
 		} else {
 			currentresources := Compute.GetAllResourceGroups(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
-			fmt.Println(currentresources)
-			var currentreturnedResources Compute.VMtoModel
+			var currentreturnedVMNames []string
+			var currentreturnedResGroups []string
+			var currentreturnedOperatingSystems []string
+			var currentreturnedAdminUsernames []string
+			var currentreturnedNetworkInterfaces []string
 			for i := range currentresources {
-				currentreturnedResources.ReturnedVMs = append(currentreturnedResources.ReturnedVMs, currentresources[i])
+				currentreturnedVMNames = append(currentreturnedVMNames, currentresources[i][0])
+				currentreturnedResGroups = append(currentreturnedResGroups, currentresources[i][1])
+				currentreturnedOperatingSystems = append(currentreturnedOperatingSystems, currentresources[i][2])
+				currentreturnedAdminUsernames = append(currentreturnedAdminUsernames, currentresources[i][3])
+				currentreturnedNetworkInterfaces = append(currentreturnedNetworkInterfaces, currentresources[i][4])
 			}
-			c.JSON(http.StatusOK, gin.H{"output": currentreturnedResources.ReturnedVMs})
+			var buildStringOutput []string
+			for i := range currentreturnedVMNames {
+				buildStringOutput = append(buildStringOutput, currentreturnedVMNames[i]+" "+currentreturnedResGroups[i]+" "+currentreturnedOperatingSystems[i]+" "+currentreturnedAdminUsernames[i]+" "+currentreturnedNetworkInterfaces[i])
+			}
+			fmt.Println(buildStringOutput)
+			c.JSON(http.StatusOK, gin.H{"output": buildStringOutput})
 		}
 	})
 

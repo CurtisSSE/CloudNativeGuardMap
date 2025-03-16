@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { actionsCaption, actionsDesc, actionsLink, actionsMetaID, actionsType, existingRecommendations, existingResources, existingSubscriptions, expandedAdvisorButtonIdx, impactedField, impactedValue, impactfromAlert, loggedInUser, longDesc, potentialBenefits, recExpandButton, recID, recName, selectedSubscriptionID, selectedSubscriptionName, shortDesc, shortSol, subscriptionButtonState, subscriptionIsSelectedState, threatModelButtonState, threatModelDrawing, threatModelGeneratedState, zeroRecs } from "../../stores/persistentsession.js";
+    import { actionsCaption, actionsDesc, actionsLink, actionsMetaID, actionsType, existingRecommendations, existingResources, existingSubscriptions, expandedAdvisorButtonIdx, impactedField, impactedValue, impactfromAlert, loggedInUser, longDesc, potentialBenefits, recExpandButton, recID, recName, selectedSubscriptionID, selectedSubscriptionName, shortDesc, shortSol, subscriptionButtonState, subscriptionIsSelectedState, threatModelButtonState, threatModelGeneratedState, zeroRecs } from "../../stores/persistentsession.js";
     
     async function azureLogout() {
         const response = await fetch('http://localhost:5000/auth-logout', { method: 'POST' });

@@ -37,7 +37,7 @@
     {/snippet}
 
     {#snippet startAdvisorRecommendationsSnippet()}
-        <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => { FunctionPersist.azureToggleAdvisorState(); FunctionPersist.azureSetAdvisorRecommendations($existingRecommendations);}}>Check Azure Advisor security recommendations</button>
+        <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => { FunctionPersist.azureToggleAdvisorState(); FunctionPersist.azureSetAdvisorRecommendations();}}>Check Azure Advisor security recommendations</button>
     {/snippet}
 
     {#snippet startResourcesSnippet()}
@@ -45,7 +45,7 @@
     {/snippet}
 
     {#snippet startThreatModelSnippet()}
-    <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => { FunctionPersist.azureToggleThreatModelState();}}>Generate Threat Model</button>
+    <a href="/threatmodel" class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => { FunctionPersist.azureToggleThreatModelState();}}>Start Threat Modeling</a>
     {/snippet}
 
 
@@ -110,7 +110,7 @@
         </div>
         {/each}
         {:else if $recExpandButton == false}
-        <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => {FunctionPersist.azureSetAdvisorRecommendations($existingRecommendations); FunctionPersist.azureRecButtonHandler()}}>Expand Recommendations</button>
+        <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => {FunctionPersist.azureSetAdvisorRecommendations(); FunctionPersist.azureRecButtonHandler()}}>Expand Recommendations</button>
         {/if}
         </center>
     {/snippet}
@@ -122,12 +122,6 @@
     {$existingResources}
     </center>
     {/snippet}
-
-    <!-- Important snippet, generates the threat model based on returned resource variables like VMs and Network Interfaces drawn using the HTML5 canvas. -->
-    {#snippet generateThreatModelSnippet()}
-    <canvas id="vm1" width="600" height="400"></canvas>
-    {/snippet}
-
 
     <!-- If the user is logged in and a subscription is not selected. -->
     {#if $loggedInUser != '' && $subscriptionButtonState == false}
@@ -157,9 +151,6 @@
     <!-- If the user is logged in, has selected a subscription and has selected to display resources in their subscription. -->
     {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == false && $resourcesGeneratedState == true && $threatModelGeneratedState == false}
     {@render displayResourcesSnippet()}
-
-    {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == false && $resourcesGeneratedState == false && $threatModelGeneratedState == true}
-    {@render generateThreatModelSnippet()}
 
     <!-- If the user is not logged in. -->
     {:else if $loggedInUser == ''}

@@ -1,7 +1,7 @@
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 // Svelte stores for threat model related variables.
-import { threatModelGeneratedState, threatModelButtonState, threatModelDrawing} from "../stores/persistentsession.js";
+import { threatModelGeneratedState, threatModelButtonState, threatModelGeneratedActual, zeroVMs, vmNames, resGroups, operatingSystems, adminUsernames, networkInterfaces} from "../stores/persistentsession.js";
 // Svelte stores for Resources.
 import { existingResources, resourcesGeneratedState } from "../stores/persistentsession.js";
 // Svelte stores for Subscriptions.
@@ -64,7 +64,7 @@ export async function azureStartResourcesAuth(subscriptionid: string) {
 }
 
 export async function azureResourcesRequest() {
-    azureReleaseResources();
+    await azureReleaseResources();
     await fetch("http://localhost:5000/resources-request", {method: "POST"}).then(async (response) => {
         if (response.ok) {
         let resources = await response.json();
@@ -113,13 +113,43 @@ export async function azureToggleThreatModelState() {
     await tick();
 }
 
-export async function azureSetAdvisorRecommendations(recommendations: string[]) {
+export async function azureSetResourceVirtualMachines() {
+    await azureReleaseVirtualMachines();
+    await azureReleaseResources();
+    await azureResourcesRequest();
+    if (get(existingResources).length > 0) {
+        zeroVMs.set(false);
+        for (let i = 0; i < get(existingResources).length; i++) {
+            let vmShape = get(existingResources)[i].split(" ");
+            vmNames.update(($vmNames) => [...$vmNames, vmShape[0]]);
+            resGroups.update(($resGroups) => [...$resGroups, vmShape[1]]);
+            operatingSystems.update(($operatingSystems) => [...$operatingSystems, vmShape[2]]);
+            adminUsernames.update(($adminUsernames) => [...$adminUsernames, vmShape[3]]);
+            networkInterfaces.update(($networkInterfaces) => [...$networkInterfaces, vmShape[4]]);
+            }
+    } else {
+        zeroVMs.set(true);
+    }
+    await tick(); 
+}
+
+export async function azureReleaseVirtualMachines() {
+    zeroVMs.set(true);
+    existingResources.set([]);
+    vmNames.set([]);
+    resGroups.set([]);
+    operatingSystems.set([]);
+    adminUsernames.set([]);
+    networkInterfaces.set([]);
+}
+
+export async function azureSetAdvisorRecommendations() {
     await azureReleaseAdvisorRecommendations();
     await azureAdvisorRequest();
     if (get(existingRecommendations).length > 0) {
         zeroRecs.set(false);
-        for (let i = 0; i < recommendations.length; i++) {
-            const advisorsections = recommendations[i].split(splitVar);
+        for (let i = 0; i < get(existingRecommendations).length; i++) {
+            const advisorsections = get(existingRecommendations)[i].split(splitVar);
             //if (advisorsections[10] == 'Security') {
                 recName.update(($recName) => [...$recName, advisorsections[0]]);
                 recID.update(($recID) => [...$recID, advisorsections[1].split('/providers/Microsoft.Advisor/rec')[0]]);
@@ -135,9 +165,6 @@ export async function azureSetAdvisorRecommendations(recommendations: string[]) 
                 impactedField.update(($impactedField) => [...$impactedField, advisorsections[11]]);
                 impactedValue.update(($impactedValue) => [...$impactedValue, advisorsections[12]]);
                 potentialBenefits.update(($potentialBenefits) => [...$potentialBenefits, advisorsections[13]]);
-                //} else {
-                    //continue
-                //}
             }
     } else {
         zeroRecs.set(true);
@@ -191,6 +218,16 @@ export async function azureToggleResourcesState() {
     }
     await tick();
 }
+
 export function toggleAlertExpand(idx: any) {
     expandedAdvisorButtonIdx.set(expandedAdvisorButtonIdx === idx ? null : idx);
+}
+
+export async function azureToggleThreatModelActualState() {
+    if (get(threatModelGeneratedActual) == true) {
+        threatModelGeneratedActual.set(false);
+    } else {
+        threatModelGeneratedActual.set(true);
+    }
+    await tick();
 }

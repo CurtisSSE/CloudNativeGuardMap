@@ -16,10 +16,6 @@ type VirtualMachine struct {
 	NetworkInterface string
 }
 
-type VMtoModel struct {
-	ReturnedVMs [][]string
-}
-
 var VMquery armresourcegraph.QueryRequest
 var VMqueryoptions *armresourcegraph.ClientResourcesOptions
 
