@@ -119,12 +119,18 @@ func main() {
 			var currentreturnedOperatingSystems []string
 			var currentreturnedAdminUsernames []string
 			var currentreturnedNetworkInterfaces []string
+			var currentreturnedOsDisks []string
+			var currentreturnedOsDiskTypes []string
+			var currentreturnedDataDisks []string
 			for i := range currentresources {
 				currentreturnedVMNames = append(currentreturnedVMNames, currentresources[i][0])
 				currentreturnedResGroups = append(currentreturnedResGroups, currentresources[i][1])
 				currentreturnedOperatingSystems = append(currentreturnedOperatingSystems, currentresources[i][2])
 				currentreturnedAdminUsernames = append(currentreturnedAdminUsernames, currentresources[i][3])
 				currentreturnedNetworkInterfaces = append(currentreturnedNetworkInterfaces, currentresources[i][4])
+				currentreturnedOsDisks = append(currentreturnedOsDisks, currentresources[i][5])
+				currentreturnedOsDiskTypes = append(currentreturnedOsDiskTypes, currentresources[i][6])
+				currentreturnedDataDisks = append(currentreturnedDataDisks, currentresources[i][7])
 			}
 			var buildStringOutput []string
 			for i := range currentreturnedVMNames {

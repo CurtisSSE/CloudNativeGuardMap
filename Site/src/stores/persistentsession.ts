@@ -55,3 +55,8 @@ export const networkInterfaces = writable<string[]>([]);
 export const threatModelButtonState = writable<boolean>(false);
 export const threatModelGeneratedState = writable<boolean>(false);
 export const threatModelGeneratedActual = writable<boolean>(false);
+
+// Threat Model ThreatProcess positions
+export const currentposxmod = writable<number>(0);
+export const currentposx = writable<number>(200);
+export const currentposy = writable<number>(100);
