@@ -108,20 +108,42 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"SubidData": subiddataTransfer})
 	})
 
-	siteRouter.POST("/resources-request", func(c *gin.Context) {
+	siteRouter.POST("/resources-vm-request", func(c *gin.Context) {
 		//var returnedVMOutputString string
 		if Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient == nil {
 			log.Fatal("ResourceFactoryClient not properly initialized (nil)")
 		} else {
-			currentresources := Compute.GetAllResourceGroups(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
+			// VM sep
+			currentresources := Compute.GetAllVirtualMachines(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
 			var currentreturnedVMNames []string
 			var currentreturnedResGroups []string
 			var currentreturnedOperatingSystems []string
 			var currentreturnedAdminUsernames []string
 			var currentreturnedNetworkInterfaces []string
 			var currentreturnedOsDisks []string
-			var currentreturnedOsDiskTypes []string
 			var currentreturnedDataDisks []string
+			// VN sep
+			currentresourcesNetworks := Compute.GetAllVirtualNetworks(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
+			var currentreturnedVNNames []string
+			var currentreturnedVNResGroups []string
+			var currentreturnedIPAddresses []string
+			var currentreturnedAddressPrefixes []string
+			// VNI sep
+			currentresourcesNetworkInterfaces := Compute.GetAllVirtualNetworkInterfaces(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
+			var currentreturnedVNINames []string
+			var currentreturnedPrivateIPs []string
+			var currentreturnedPublicIPIDs []string
+			// PIP sep
+			currentresourcesPublicIPs := Compute.GetAllPublicIPs(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
+			var currentreturnedIPIDs []string
+			var currentreturnedPIPResGroups []string
+			var currentreturnedActualPublicIPs []string
+			// NSG sep
+			currentresourcesNSGs := Compute.GetAllNSGs(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
+			var currentreturnedNSGNames []string
+			var currentreturnedNSGResGroups []string
+			var currentreturnedAttachedNIs []string
+
 			for i := range currentresources {
 				currentreturnedVMNames = append(currentreturnedVMNames, currentresources[i][0])
 				currentreturnedResGroups = append(currentreturnedResGroups, currentresources[i][1])
@@ -129,12 +151,17 @@ func main() {
 				currentreturnedAdminUsernames = append(currentreturnedAdminUsernames, currentresources[i][3])
 				currentreturnedNetworkInterfaces = append(currentreturnedNetworkInterfaces, currentresources[i][4])
 				currentreturnedOsDisks = append(currentreturnedOsDisks, currentresources[i][5])
-				currentreturnedOsDiskTypes = append(currentreturnedOsDiskTypes, currentresources[i][6])
-				currentreturnedDataDisks = append(currentreturnedDataDisks, currentresources[i][7])
+				currentreturnedDataDisks = append(currentreturnedDataDisks, currentresources[i][6])
+			}
+
+			for i := range currentresourcesNetworks {
+				currentreturnedVNNames = append(currentreturnedVNNames, currentresourcesNetworks[i][0])
+				currentreturnedVNResGroups = append(currentreturnedVNResGroups, currentresourcesNetworks[i][1])
+				currentreturned
 			}
 			var buildStringOutput []string
 			for i := range currentreturnedVMNames {
-				buildStringOutput = append(buildStringOutput, currentreturnedVMNames[i]+" "+currentreturnedResGroups[i]+" "+currentreturnedOperatingSystems[i]+" "+currentreturnedAdminUsernames[i]+" "+currentreturnedNetworkInterfaces[i])
+				buildStringOutput = append(buildStringOutput, currentreturnedVMNames[i]+" "+currentreturnedResGroups[i]+" "+currentreturnedOperatingSystems[i]+" "+currentreturnedAdminUsernames[i]+" "+currentreturnedNetworkInterfaces[i]+" "+currentreturnedOsDisks[i]+" "+currentreturnedDataDisks[i])
 			}
 			fmt.Println(buildStringOutput)
 			c.JSON(http.StatusOK, gin.H{"output": buildStringOutput})

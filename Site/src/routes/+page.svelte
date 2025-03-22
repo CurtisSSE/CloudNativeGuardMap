@@ -39,11 +39,6 @@
     {#snippet startAdvisorRecommendationsSnippet()}
         <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => { FunctionPersist.azureToggleAdvisorState(); FunctionPersist.azureSetAdvisorRecommendations();}}>Check Azure Advisor security recommendations</button>
     {/snippet}
-
-    {#snippet startResourcesSnippet()}
-        <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => { FunctionPersist.azureToggleResourcesState(); FunctionPersist.azureResourcesRequest();}}>Check Azure Resources</button>
-    {/snippet}
-
     {#snippet startThreatModelSnippet()}
     <a href="/threatmodel" class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => { FunctionPersist.azureToggleThreatModelState();}}>Start Threat Modeling</a>
     {/snippet}
@@ -139,7 +134,6 @@
     {@render selectedSubscriptionSnippet()}<br/><br/>
     {@render changeSelectedSubscriptionSnippet()}<br/><br/>
     {@render startAdvisorRecommendationsSnippet()}<br/><br/>
-    {@render startResourcesSnippet()}
     {@render startThreatModelSnippet()}
     </center>
 

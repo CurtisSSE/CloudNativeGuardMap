@@ -15,27 +15,49 @@ type VirtualMachine struct {
 	AdminUsername    string
 	NetworkInterface string
 	OsDiskName       string
-	OsDiskSize       string
-	OsDiskType       string
 	DataDisksName    string
 }
 
-type NetworkComponents struct {
-	PublicIP string
+type VirtualNetwork struct {
+	VNName        string
+	ResGroup      string
+	IPAddresses   string
+	AddressPrefix string
+}
+
+type VirtualNetworkInterface struct {
+	VNIName    string
+	ResGroup   string
+	PrivateIP  string
+	PublicIPID string
+}
+
+type PublicIPAttributes struct {
+	IPID           string
+	ResGroup       string
+	ActualPublicIP string
+}
+
+type NetworkSecurityGroups struct {
+	NSGName                  string
+	ResGroup                 string
+	AttachedNetworkInterface string
 }
 
 var VMquery armresourcegraph.QueryRequest
 var VMqueryoptions *armresourcegraph.ClientResourcesOptions
 
-func GetAllResourceGroups(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceFields map[int][]string) {
+//var dataDiskCycle string
+
+func GetAllVirtualMachines(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceFields map[int][]string) {
 	var currentResource VirtualMachine
-	VMquerytext := "Resources | where type =~ 'Microsoft.Compute/virtualMachines' | project name, resourceGroup, operatingSystem = (properties['extended']['instanceView']['osName']), operatingVersion = (properties['extended']['instanceView']['osVersion']), adminUsername = (properties['osProfile']['adminUsername']), networkProfile = (properties['networkProfile']['networkInterfaces']), osDisk = (properties['storageProfile']['osDisk']), osDiskType = (properties['storageProfile']['osDisk']['managedDisk'], dataDisks = (properties['storageProfile']['dataDisks']), dataDisksType = (properties['storageProfile']['dataDisks']['managedDisk'])"
+	VMquerytext := "Resources | where type =~ 'Microsoft.Compute/virtualMachines' | project name, resourceGroup, operatingSystem = (properties['extended']['instanceView']['osName']), operatingVersion = (properties['extended']['instanceView']['osVersion']), adminUsername = (properties['osProfile']['adminUsername']), networkProfile = (properties['networkProfile']['networkInterfaces']), osDisk = (properties['storageProfile']['osDisk']['name']), dataDisks = (properties['storageProfile']['dataDisks'])"
 	VMquery.Query = &VMquerytext
 	VMquery.Subscriptions = append(VMquery.Subscriptions, subscriptionid)
 	currentctx := context.Background()
 	queryresponse, err := resourceclientvariable.Resources(currentctx, VMquery, VMqueryoptions)
 	if err != nil {
-		fmt.Println("Querying resources failed. Check authentication or other issues", err)
+		fmt.Println("Querying virtual machines failed. Check authentication or other issues", err)
 	}
 	resourceoutputd, _ := json.Marshal(queryresponse.Data)
 	var resourceumData []map[string]interface{}
@@ -46,6 +68,7 @@ func GetAllResourceGroups(resourceclientvariable *armresourcegraph.Client, subsc
 	} else {
 		currentresourceFields = make(map[int][]string)
 		for i, resourceumIter := range resourceumData {
+			//dataDiskCycle = string(rune(i))
 			currentResource.VMName = resourceumIter["name"].(string)
 			currentResource.ResGroup = resourceumIter["resourceGroup"].(string)
 			currentResource.OperatingSystem = resourceumIter["operatingSystem"].(string) + "-" + resourceumIter["operatingVersion"].(string)
@@ -54,19 +77,143 @@ func GetAllResourceGroups(resourceclientvariable *armresourcegraph.Client, subsc
 			var networkumData []map[string]interface{}
 			json.Unmarshal(networkjsonProcessing, &networkumData)
 			currentResource.NetworkInterface = networkumData[0]["id"].(string)
-			osdiskjsonProcessing, _ := json.Marshal(resourceumIter["osDisk"])
-			var osdiskumData []map[string]interface{}
-			json.Unmarshal(osdiskjsonProcessing, &osdiskumData)
-			currentResource.OsDiskName = osdiskumData[0]["name"].(string)
-			currentResource.OsDiskSize = osdiskumData[0]["diskSizeGB"].(string)
-			osdisktypejsonProcessing, _ := json.Marshal(resourceumIter["osDiskType"])
-			var osdisktypeumData []map[string]interface{}
-			json.Unmarshal(osdisktypejsonProcessing, &osdisktypeumData)
-			currentResource.OsDiskType = osdisktypeumData[0]["storageAccountType"].(string)
+			currentResource.OsDiskName = resourceumIter["osDisk"].(string)
 			datadisksjsonProcessing, _ := json.Marshal(resourceumIter["dataDisks"])
 			var datadisksumData []map[string]interface{}
-			json.Unmarshal(osdisk)
-			currentresourceFields[i] = []string{currentResource.VMName, currentResource.ResGroup, currentResource.OperatingSystem, currentResource.AdminUsername, currentResource.NetworkInterface, currentResource.OsDiskName, currentResource.OsDiskSize, currentResource.OsDiskType, currentResource.DataDisks}
+			json.Unmarshal(datadisksjsonProcessing, &datadisksumData)
+			if len(datadisksumData) != 0 {
+				currentResource.DataDisksName = datadisksumData[0]["name"].(string)
+			} else {
+				currentResource.DataDisksName = "No-Data-Disks"
+			}
+
+			currentresourceFields[i] = []string{currentResource.VMName, currentResource.ResGroup, currentResource.OperatingSystem, currentResource.AdminUsername, currentResource.NetworkInterface, currentResource.OsDiskName, currentResource.DataDisksName}
+		}
+	}
+	return currentresourceFields
+}
+
+var NIquery armresourcegraph.QueryRequest
+var NIqueryoptions *armresourcegraph.ClientResourcesOptions
+
+func GetAllVirtualNetworks(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceFields map[int][]string) {
+	var currentResourceVirtualNetwork VirtualNetwork
+	NIquerytext := "Resources | where type =~ 'Microsoft.Network/virtualNetworks' | project name, resourceGroup, ipAddresses = (properties['subnets'][0]['properties']['ipConfigurations']), addressPrefix = (properties['subnets'][0]['properties']['addressPrefix'])"
+	NIquery.Query = &NIquerytext
+	NIquery.Subscriptions = append(NIquery.Subscriptions, subscriptionid)
+	currentctx := context.Background()
+	queryresponse, err := resourceclientvariable.Resources(currentctx, NIquery, NIqueryoptions)
+	if err != nil {
+		fmt.Println("Querying virtual networks failed. Check authentication or other issues.", err)
+	}
+	resourceoutputd, _ := json.Marshal(queryresponse.Data)
+	var resourceumData []map[string]interface{}
+	resourceerr := json.Unmarshal([]byte(resourceoutputd), &resourceumData)
+	if resourceerr != nil {
+		fmt.Println("Error unmarshaling resource data.", resourceerr)
+		return
+	} else {
+		currentresourceFields := make(map[int][]string)
+		for i, resourceumIter := range resourceumData {
+			currentResourceVirtualNetwork.VNName = resourceumIter["name"].(string)
+			currentResourceVirtualNetwork.ResGroup = resourceumIter["resourceGroup"].(string)
+			currentResourceVirtualNetwork.IPAddresses = resourceumIter["ipAddresses"].(string)
+			currentResourceVirtualNetwork.AddressPrefix = resourceumIter["addressPrefix"].(string)
+			currentresourceFields[i] = []string{currentResourceVirtualNetwork.VNName, currentResourceVirtualNetwork.ResGroup, currentResourceVirtualNetwork.IPAddresses, currentResourceVirtualNetwork.AddressPrefix}
+		}
+	}
+	return currentresourceFields
+}
+
+var VINquery armresourcegraph.QueryRequest
+var VINqueryoptions *armresourcegraph.ClientResourcesOptions
+
+func GetAllVirtualNetworkInterfaces(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceFields map[int][]string) {
+	var currentResourceVirtualNetworkInterface VirtualNetworkInterface
+	VINquerytext := "Resources | where type =~ 'Microsoft.Network/networkInterfaces' | project name, privateip = (properties['ipConfigurations'][0]['properties']['privateIPAddress']), resourceGroup, publicip = (properties['ipConfigurations'][0]['properties']['publicIPAddress']['id'])"
+	VINquery.Query = &VINquerytext
+	VINquery.Subscriptions = append(VINquery.Subscriptions, subscriptionid)
+	currentctx := context.Background()
+	queryresponse, err := resourceclientvariable.Resources(currentctx, VINquery, VINqueryoptions)
+	if err != nil {
+		fmt.Println("Querying virtual network interfaces failed. Check authentication or other issues.", err)
+	}
+	resourceoutputd, _ := json.Marshal(queryresponse.Data)
+	var resourceumData []map[string]interface{}
+	resourceerr := json.Unmarshal([]byte(resourceoutputd), &resourceumData)
+	if resourceerr != nil {
+		fmt.Println("Error unmarshaling resource data.", resourceerr)
+		return
+	} else {
+		currentresourceFields := make(map[int][]string)
+		for i, resourceumIter := range resourceumData {
+			currentResourceVirtualNetworkInterface.VNIName = resourceumIter["name"].(string)
+			currentResourceVirtualNetworkInterface.PrivateIP = resourceumIter["privateip"].(string)
+			currentResourceVirtualNetworkInterface.PublicIPID = resourceumIter["publicip"].(string)
+			currentResourceVirtualNetworkInterface.ResGroup = resourceumIter["resourceGroup"].(string)
+			currentresourceFields[i] = []string{currentResourceVirtualNetworkInterface.VNIName, currentResourceVirtualNetworkInterface.PrivateIP, currentResourceVirtualNetworkInterface.PublicIPID}
+		}
+	}
+	return currentresourceFields
+}
+
+var PIPquery armresourcegraph.QueryRequest
+var PIPqueryoptions *armresourcegraph.ClientResourcesOptions
+
+func GetAllPublicIPs(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceFields map[int][]string) {
+	var currentResourcePublicIP PublicIPAttributes
+	PIPquerytext := "Resources | where type =~ 'Microsoft.Network/publicIPAddresses' | project id, resourceGroup, subscriptionId, actualip = (properties['ipAddress'])"
+	PIPquery.Query = &PIPquerytext
+	PIPquery.Subscriptions = append(PIPquery.Subscriptions, subscriptionid)
+	currentctx := context.Background()
+	queryresponse, err := resourceclientvariable.Resources(currentctx, PIPquery, PIPqueryoptions)
+	if err != nil {
+		fmt.Println("Querying public IPs failed. Check authentication or other issues.", err)
+	}
+	resourceoutputd, _ := json.Marshal(queryresponse.Data)
+	var resourceumData []map[string]interface{}
+	resourceerr := json.Unmarshal([]byte(resourceoutputd), &resourceumData)
+	if resourceerr != nil {
+		fmt.Println("Error unmarshaling resource data.", resourceerr)
+		return
+	} else {
+		currentresourceFields := make(map[int][]string)
+		for i, resourceumIter := range resourceumData {
+			currentResourcePublicIP.IPID = resourceumIter["id"].(string)
+			currentResourcePublicIP.ResGroup = resourceumIter["resourceGroup"].(string)
+			currentResourcePublicIP.ActualPublicIP = resourceumIter["actualip"].(string)
+			currentresourceFields[i] = []string{currentResourcePublicIP.IPID, currentResourcePublicIP.ResGroup, currentResourcePublicIP.ActualPublicIP}
+		}
+	}
+	return currentresourceFields
+}
+
+var NSGquery armresourcegraph.QueryRequest
+var NSGqueryoptions *armresourcegraph.ClientResourcesOptions
+
+func GetAllNSGs(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceFields map[int][]string) {
+	var currentResourceNSG NetworkSecurityGroups
+	NSGquerytext := "where type =~ 'Microsoft.Network/networkSecurityGroups' | project name, resourceGroup, attachedinterface = (properties['networkInterfaces'][0]['id'])"
+	NSGquery.Query = &NSGquerytext
+	NSGquery.Subscriptions = append(NSGquery.Subscriptions, subscriptionid)
+	currentctx := context.Background()
+	queryresponse, err := resourceclientvariable.Resources(currentctx, NSGquery, NSGqueryoptions)
+	if err != nil {
+		fmt.Println("Querying network security groups failed. Check authentication or other issues.", err)
+	}
+	resourceoutputd, _ := json.Marshal(queryresponse.Data)
+	var resourceumData []map[string]interface{}
+	resourceerr := json.Unmarshal([]byte(resourceoutputd), &resourceumData)
+	if resourceerr != nil {
+		fmt.Println("Error unmarshaling resource data.", resourceerr)
+		return
+	} else {
+		currentresourceFields := make(map[int][]string)
+		for i, resourceumIter := range resourceumData {
+			currentResourceNSG.NSGName = resourceumIter["name"].(string)
+			currentResourceNSG.ResGroup = resourceumIter["resourceGroup"].(string)
+			currentResourceNSG.AttachedNetworkInterface = resourceumIter["attachedinterface"].(string)
+			currentresourceFields[i] = []string{currentResourceNSG.NSGName, currentResourceNSG.ResGroup, currentResourceNSG.AttachedNetworkInterface}
 		}
 	}
 	return currentresourceFields

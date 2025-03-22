@@ -50,6 +50,8 @@ export const resGroups = writable<string[]>([]);
 export const operatingSystems = writable<string[]>([]);
 export const adminUsernames = writable<string[]>([]);
 export const networkInterfaces = writable<string[]>([]);
+export const osDisks = writable<string[]>([]);
+export const dataDisks = writable<string[]>([]);
 
 // Threat Model states
 export const threatModelButtonState = writable<boolean>(false);

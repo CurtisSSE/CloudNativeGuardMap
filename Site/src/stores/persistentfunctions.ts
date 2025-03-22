@@ -1,7 +1,7 @@
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 // Svelte stores for threat model related variables.
-import { threatModelGeneratedState, threatModelButtonState, threatModelGeneratedActual, zeroVMs, vmNames, resGroups, operatingSystems, adminUsernames, networkInterfaces} from "../stores/persistentsession.js";
+import { threatModelGeneratedState, threatModelGeneratedActual, zeroVMs, vmNames, resGroups, operatingSystems, adminUsernames, networkInterfaces, osDisks, dataDisks} from "../stores/persistentsession.js";
 // Svelte stores for Resources.
 import { existingResources, resourcesGeneratedState } from "../stores/persistentsession.js";
 // Svelte stores for Subscriptions.
@@ -63,9 +63,9 @@ export async function azureStartResourcesAuth(subscriptionid: string) {
     await tick();
 }
 
-export async function azureResourcesRequest() {
+export async function azureResourcesVMRequest() {
     await azureReleaseResources();
-    await fetch("http://localhost:5000/resources-request", {method: "POST"}).then(async (response) => {
+    await fetch("http://localhost:5000/resources-vm-request", {method: "POST"}).then(async (response) => {
         if (response.ok) {
         let resources = await response.json();
         let resourcesFromGin = resources.output;
@@ -116,7 +116,7 @@ export async function azureToggleThreatModelState() {
 export async function azureSetResourceVirtualMachines() {
     await azureReleaseVirtualMachines();
     await azureReleaseResources();
-    await azureResourcesRequest();
+    await azureResourcesVMRequest();
     if (get(existingResources).length > 0) {
         zeroVMs.set(false);
         for (let i = 0; i < get(existingResources).length; i++) {
@@ -126,6 +126,8 @@ export async function azureSetResourceVirtualMachines() {
             operatingSystems.update(($operatingSystems) => [...$operatingSystems, vmShape[2]]);
             adminUsernames.update(($adminUsernames) => [...$adminUsernames, vmShape[3]]);
             networkInterfaces.update(($networkInterfaces) => [...$networkInterfaces, vmShape[4]]);
+            osDisks.update(($osDisks) => [...$osDisks, vmShape[5]]);
+            dataDisks.update(($dataDisks) => [...$dataDisks, vmShape[6]]);
             }
     } else {
         zeroVMs.set(true);

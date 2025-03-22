@@ -4,7 +4,7 @@
     // Functions from the main svelte page to process threat modeling functions.
     import * as FunctionPersist from "../../stores/persistentfunctions.js";
     // Svelte stores for existing resources.
-    import { existingResources, operatingSystems, vmNames, adminUsernames, networkInterfaces, resGroups } from "../../stores/persistentsession.js";
+    import { operatingSystems, vmNames, adminUsernames, networkInterfaces, resGroups, osDisks, dataDisks} from "../../stores/persistentsession.js";
     // Svelte stores for threat model.
     import { threatModelGeneratedState, threatModelGeneratedActual } from "../../stores/persistentsession.js";
     // Svelte stores for selected subscription.
@@ -14,7 +14,6 @@
 
 // Actual components.
 class ThreatProcess {
-    // Inside drawing text properties.
     readonly font: string = "24px Arial";
     readonly textAlign: CanvasTextAlign = "center";
     readonly textBaseline: CanvasTextBaseline = "middle";
@@ -25,27 +24,25 @@ class ThreatProcess {
 }
 
 class ThreatInteractor {
-    // Shape properties.
-    readonly lineWidth: number = 2;
-    //readonly
-    readonly textBaseline = "top";
+    readonly lineWidth: number = 4;
+    readonly textBaseline = "middle";
 }
 
 class ThreatDataStore {
-    readonly lineWidth: number = 4;
     readonly textBaseline: CanvasTextBaseline = "middle";
-    readonly fillStyle: string = "black";
+    readonly strokeStyle: string = "black";
 }
 
 class ThreatDataFlow {
-
 }
 
 class ThreatTrustBoundary {
     readonly setLineDash: Array<number> = [6];
     readonly strokeStyle: string = "red";
-    readonly trustBoundaryHeight: number = 1300;
-    readonly trustBoundaryWidth: number = 600;
+    readonly subscriptionTrustBoundaryHeight: number = 500;
+    readonly subscriptionTrustBoundaryWidth: number = 1450;
+    readonly resourcegroupTrustBoundaryHeight: number = 400;
+    readonly resourcegroupTrustBoundaryWidth: number = 1350;
 }
 
 const threatProcess = new ThreatProcess;
@@ -55,7 +52,7 @@ const threatDataFlow = new ThreatDataFlow;
 const threatTrustBoundary = new ThreatTrustBoundary;
 
 
-function generateThreatProcessObject(ctx: CanvasRenderingContext2D) {
+function generateThreatModelSubFunction(ctx: CanvasRenderingContext2D) {
     if (ctx) {
         for (let i = 0; i < $vmNames.length; i++) {
             if (i != 0) {
@@ -69,22 +66,64 @@ function generateThreatProcessObject(ctx: CanvasRenderingContext2D) {
             ctx.textAlign = threatProcess.textAlign;
             ctx.textBaseline = threatProcess.textBaseline;
             ctx.fillStyle = threatProcess.fillStyle;
-            ctx.strokeText($vmNames[i], (get(currentposx) + get(currentposxmod)), get(currentposy), 100);
+            ctx.strokeText("VM: " + $vmNames[i], (get(currentposx) + get(currentposxmod)), get(currentposy), 200);
             ctx.strokeStyle = "blue";
-            ctx.strokeText("OS: " + $operatingSystems[i], (get(currentposx) + get(currentposxmod)), get(currentposy) - 20, 75);
+            ctx.strokeText("OS: " + $operatingSystems[i], (get(currentposx) + get(currentposxmod)), get(currentposy) - 20, 150);
             ctx.strokeStyle = "black";
             if ($networkInterfaces[i] !== undefined && $networkInterfaces[i] !== null) {
                 ctx.strokeStyle = "green";
                 const NICstr = ($networkInterfaces[i].split("/")).slice(-1);
-                ctx.strokeText("NIC: " + NICstr, (get(currentposx) + get(currentposxmod)), get(currentposy) + 20, 200);
+                ctx.strokeText("NIC: " + NICstr, (get(currentposx) + get(currentposxmod)), get(currentposy) + 20, 150);
                 ctx.strokeStyle = "black";
             }
             if ($adminUsernames[i].includes("adm")) {
                 ctx.strokeStyle = "red";
-                ctx.strokeText("Weak ADM Username: " + $adminUsernames[i], (get(currentposx) + get(currentposxmod)), get(currentposy) + 40, 200);
+                ctx.strokeText("Weak ADM Username: " + $adminUsernames[i], (get(currentposx) + get(currentposxmod)), get(currentposy) + 40, 150);
                 ctx.strokeStyle = "black";
             }
-
+            ctx.closePath();
+            ctx.beginPath();
+            ctx.strokeStyle = threatDataStore.strokeStyle;
+            if ($osDisks[i] !== undefined && $osDisks[i] !== null) {
+                ctx.moveTo(get(currentposx) + get(currentposxmod), get(currentposy) + 60)
+                ctx.lineTo(get(currentposx) + get(currentposxmod), get(currentposy) + 90);
+                ctx.stroke();
+                ctx.lineTo(get(currentposx) + 5 + get(currentposxmod), get(currentposy) + 85);
+                ctx.stroke();
+                ctx.moveTo(get(currentposx) + get(currentposxmod), get(currentposy) + 90);
+                ctx.lineTo(get(currentposx) - 5 + get(currentposxmod), get(currentposy) + 85);
+                ctx.stroke();
+                ctx.moveTo(get(currentposx) + get(currentposxmod) - 100, get(currentposy) + 100);
+                ctx.lineTo(get(currentposx) + get(currentposxmod) + 100, get(currentposy) + 100);
+                ctx.stroke();
+                ctx.textBaseline = threatDataStore.textBaseline;
+                ctx.strokeText("OS Disk: " + $osDisks[i], get(currentposx) + get(currentposxmod), get(currentposy) + 140, 225);
+                ctx.moveTo(get(currentposx) + get(currentposxmod) - 100, get(currentposy) + 180);
+                ctx.lineTo(get(currentposx) + get(currentposxmod) + 100, get(currentposy) + 180);
+                ctx.stroke();
+            }
+            ctx.closePath();
+            ctx.beginPath();
+            ctx.strokeStyle = threatDataStore.strokeStyle;
+            ctx.moveTo(get(currentposx) + get(currentposxmod) - 100, get(currentposy) + 240);
+            if ($dataDisks[i] !== undefined && $dataDisks[i] !== null && $dataDisks[i] != 'No-Data-Disks') {
+                ctx.moveTo(get(currentposx) + get(currentposxmod), get(currentposy) + 200)
+                ctx.lineTo(get(currentposx) + get(currentposxmod), get(currentposy) + 230);
+                ctx.stroke();
+                ctx.lineTo(get(currentposx) + 5 + get(currentposxmod), get(currentposy) + 225);
+                ctx.stroke();
+                ctx.moveTo(get(currentposx) + get(currentposxmod), get(currentposy) + 230);
+                ctx.lineTo(get(currentposx) - 5 + get(currentposxmod), get(currentposy) + 225);
+                ctx.stroke();
+                ctx.moveTo(get(currentposx) + get(currentposxmod) - 100, get(currentposy) + 240);
+                ctx.lineTo(get(currentposx) + get(currentposxmod) + 100, get(currentposy) + 240);
+                ctx.stroke();
+                ctx.textBaseline = threatDataStore.textBaseline;
+                ctx.strokeText("Attached Disk: " + $dataDisks[i], get(currentposx) + get(currentposxmod), get(currentposy) + 280, 225);
+                ctx.moveTo(get(currentposx) + get(currentposxmod) - 100, get(currentposy) + 320);
+                ctx.lineTo(get(currentposx) + get(currentposxmod) + 100, get(currentposy) + 320);
+                ctx.stroke();
+            }
             ctx.closePath();
             ctx.restore();
         }
@@ -103,16 +142,17 @@ async function generateThreatModel() {
     threatModelGeneratedActual.set(true);
     await tick();
     ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-    ctx.setLineDash([6]);
-    ctx.strokeStyle = "red";
-    ctx.strokeRect(30, 30, 1300, 600);
+    ctx.setLineDash(threatTrustBoundary.setLineDash);
+    ctx.strokeStyle = threatTrustBoundary.strokeStyle;
+    ctx.strokeRect(30, 30, threatTrustBoundary.subscriptionTrustBoundaryWidth, threatTrustBoundary.subscriptionTrustBoundaryHeight);
     ctx.setLineDash([]);
-    ctx.strokeText("Threat Boundary - Resource Group: " + $resGroups[0], 20, 20, 500);
+    ctx.strokeText("Threat Boundary - Subscription: " + $selectedSubscriptionName + " | " + "Subscription ID: " + $selectedSubscriptionID, 20, 20, 1000);
+    ctx.setLineDash(threatTrustBoundary.setLineDash);
+    ctx.strokeRect(60, 60, threatTrustBoundary.resourcegroupTrustBoundaryWidth, threatTrustBoundary.resourcegroupTrustBoundaryHeight);
+    ctx.setLineDash([]);
+    ctx.strokeText("Threat Boundary - Resource Group: " + $resGroups[0], 50, 50, 500);
     ctx.strokeStyle = "black";
-    generateThreatProcessObject(ctx);
-    //for (let i = 0; i < $vmNames.length; i++) {
-        //generateThreatProcessObject(ctx);
-    //}
+    generateThreatModelSubFunction(ctx);
 }
     
 </script>
