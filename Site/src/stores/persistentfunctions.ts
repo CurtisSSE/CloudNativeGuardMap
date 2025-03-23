@@ -1,7 +1,7 @@
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 // Svelte stores for threat model related variables.
-import { threatModelGeneratedState, threatModelGeneratedActual, zeroVMs, vmNames, resGroups, operatingSystems, adminUsernames, networkInterfaces, osDisks, dataDisks} from "../stores/persistentsession.js";
+import { threatModelGeneratedState, threatModelGeneratedActual, zeroVMs, vmNames, resGroups, operatingSystems, adminUsernames, networkInterfaces, osDisks, dataDisks, zeroVNIs, vnNames, vnResGroups, vnIPAddresses, vnAddressPrefixes, zeroVNs, vniNames, vniPrivateIPs, vniPublicIPIDs, zeroPIPs, pipPublicIPIDs, pipResGroups, actualPublicIPs, zeroNSGs, nsgNames, nsgResGroups, nsgAttachedNIs} from "../stores/persistentsession.js";
 // Svelte stores for Resources.
 import { existingResources, resourcesGeneratedState } from "../stores/persistentsession.js";
 // Svelte stores for Subscriptions.
@@ -63,9 +63,9 @@ export async function azureStartResourcesAuth(subscriptionid: string) {
     await tick();
 }
 
-export async function azureResourcesVMRequest() {
+export async function azureResourcesRequest() {
     await azureReleaseResources();
-    await fetch("http://localhost:5000/resources-vm-request", {method: "POST"}).then(async (response) => {
+    await fetch("http://localhost:5000/resources-request", {method: "POST"}).then(async (response) => {
         if (response.ok) {
         let resources = await response.json();
         let resourcesFromGin = resources.output;
@@ -116,7 +116,7 @@ export async function azureToggleThreatModelState() {
 export async function azureSetResourceVirtualMachines() {
     await azureReleaseVirtualMachines();
     await azureReleaseResources();
-    await azureResourcesVMRequest();
+    await azureResourcesRequest();
     if (get(existingResources).length > 0) {
         zeroVMs.set(false);
         for (let i = 0; i < get(existingResources).length; i++) {
@@ -137,12 +137,109 @@ export async function azureSetResourceVirtualMachines() {
 
 export async function azureReleaseVirtualMachines() {
     zeroVMs.set(true);
-    existingResources.set([]);
     vmNames.set([]);
     resGroups.set([]);
     operatingSystems.set([]);
     adminUsernames.set([]);
     networkInterfaces.set([]);
+}
+
+export async function azureSetResourceVirtualNetworks() {
+    await azureReleaseVirtualNetworks();
+    await azureReleaseResources();
+    await azureResourcesRequest();
+    if (get(existingResources).length > 0) {
+        zeroVNs.set(false);
+        for (let i = 0; i < get(existingResources).length; i++) {
+            let vnShape = get(existingResources)[i].split(" ");
+            vnNames.update(($vnNames) => [...$vnNames, vnShape[7]]);
+            vnResGroups.update(($vnResGroups) => [...$vnResGroups, vnShape[8]]);
+            vnIPAddresses.update(($vnIPAddresses) => [...$vnIPAddresses, vnShape[9]]);
+            vnAddressPrefixes.update(($vnAddressPrefixes) => [...$vnAddressPrefixes, vnShape[10]]);
+        }
+    } else {
+        zeroVNs.set(true);
+    }
+    await tick();
+}
+
+
+export async function azureReleaseVirtualNetworks() {
+    zeroVNs.set(true);
+    vnNames.set([]);
+    vnResGroups.set([]);
+    vnIPAddresses.set([]);
+    vnAddressPrefixes.set([]);
+}
+
+export async function azureSetResourceVirtualNetworkInterfaces() {
+    await azureReleaseVirtualNetworkInterfaces();
+    await azureReleaseResources();
+    await azureResourcesRequest();
+    if (get(existingResources).length > 0) {
+        zeroVNIs.set(false);
+        for (let i = 0; i < get(existingResources).length; i++) {
+            let vniShape = get(existingResources)[i].split(" ");
+            vniNames.update(($vniNames) => [...$vniNames, vniShape[11]]);
+            vniPrivateIPs.update(($vniPrivateIPs) => [...$vniPrivateIPs, vniShape[12]]);
+            vniPublicIPIDs.update(($vniPublicIPIDs) => [...$vniPublicIPIDs, vniShape[13]]);
+        }
+    } else {
+        zeroVNIs.set(true);
+    }
+    await tick();
+}
+
+export async function azureReleaseVirtualNetworkInterfaces() {
+    zeroVNIs.set(true);
+    vniNames.set([]);
+    vniPrivateIPs.set([]);
+    vniPublicIPIDs.set([]);
+}
+
+export async function azureSetResourcePublicIPs() {
+    await azureReleasePublicIPs();
+    await azureReleaseResources();
+    await azureResourcesRequest();
+    if (get(existingResources).length > 0) {
+        zeroPIPs.set(false);
+        for (let i = 0; i < get(existingResources).length; i++) {
+            let pipShape = get(existingResources)[i].split(" ");
+            pipPublicIPIDs.update(($pipPublicIPIDs) => [...$pipPublicIPIDs, pipShape[14]]);
+            pipResGroups.update(($pipResGroups) => [...$pipResGroups, pipShape[15]]);
+            actualPublicIPs.update(($actualPublicIPs) => [...$actualPublicIPs, pipShape[16]]);
+        }
+    }
+}
+
+export async function azureReleasePublicIPs() {
+    zeroPIPs.set(true);
+    pipPublicIPIDs.set([]);
+    pipResGroups.set([]);
+    actualPublicIPs.set([]);
+}
+
+
+export async function azureSetResourceNSGs() {
+    await azureReleaseNSGs();
+    await azureReleaseResources();
+    await azureResourcesRequest();
+    if (get(existingResources).length > 0) {
+        zeroNSGs.set(false);
+        for (let i = 0; i < get(existingResources).length; i++) {
+            let nsgShape = get(existingResources)[i].split(" ");
+            nsgNames.update(($nsgNames) => [...$nsgNames, nsgShape[17]]);
+            nsgResGroups.update(($nsgResGroups) => [...$nsgResGroups, nsgShape[18]]);
+            nsgAttachedNIs.update(($nsgAttachedNIs) => [...$nsgAttachedNIs, nsgShape[19]]);
+        }
+    }
+}
+
+export async function azureReleaseNSGs() {
+    zeroNSGs.set(true);
+    nsgNames.set([]);
+    nsgResGroups.set([]);
+    nsgAttachedNIs.set([]);
 }
 
 export async function azureSetAdvisorRecommendations() {

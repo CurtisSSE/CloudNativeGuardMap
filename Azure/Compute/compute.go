@@ -96,9 +96,9 @@ func GetAllVirtualMachines(resourceclientvariable *armresourcegraph.Client, subs
 var NIquery armresourcegraph.QueryRequest
 var NIqueryoptions *armresourcegraph.ClientResourcesOptions
 
-func GetAllVirtualNetworks(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceFields map[int][]string) {
+func GetAllVirtualNetworks(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceVNFields map[int][]string) {
 	var currentResourceVirtualNetwork VirtualNetwork
-	NIquerytext := "Resources | where type =~ 'Microsoft.Network/virtualNetworks' | project name, resourceGroup, ipAddresses = (properties['subnets'][0]['properties']['ipConfigurations']), addressPrefix = (properties['subnets'][0]['properties']['addressPrefix'])"
+	NIquerytext := "Resources | where type =~ 'Microsoft.Network/virtualNetworks' | project name, resourceGroup, ipAddress1 = (properties['subnets'][0]['properties']['ipConfigurations'][0]['id']), ipAddress2 = (properties['subnets'][0]['properties']['ipConfigurations'][1]['id']), addressPrefix = (properties['subnets'][0]['properties']['addressPrefix'])"
 	NIquery.Query = &NIquerytext
 	NIquery.Subscriptions = append(NIquery.Subscriptions, subscriptionid)
 	currentctx := context.Background()
@@ -113,22 +113,22 @@ func GetAllVirtualNetworks(resourceclientvariable *armresourcegraph.Client, subs
 		fmt.Println("Error unmarshaling resource data.", resourceerr)
 		return
 	} else {
-		currentresourceFields := make(map[int][]string)
+		currentresourceVNFields := make(map[int][]string)
 		for i, resourceumIter := range resourceumData {
 			currentResourceVirtualNetwork.VNName = resourceumIter["name"].(string)
 			currentResourceVirtualNetwork.ResGroup = resourceumIter["resourceGroup"].(string)
-			currentResourceVirtualNetwork.IPAddresses = resourceumIter["ipAddresses"].(string)
+			currentResourceVirtualNetwork.IPAddresses = resourceumIter["ipAddress1"].(string) + "~" + resourceumIter["ipAddress2"].(string)
 			currentResourceVirtualNetwork.AddressPrefix = resourceumIter["addressPrefix"].(string)
-			currentresourceFields[i] = []string{currentResourceVirtualNetwork.VNName, currentResourceVirtualNetwork.ResGroup, currentResourceVirtualNetwork.IPAddresses, currentResourceVirtualNetwork.AddressPrefix}
+			currentresourceVNFields[i] = []string{currentResourceVirtualNetwork.VNName, currentResourceVirtualNetwork.ResGroup, currentResourceVirtualNetwork.IPAddresses, currentResourceVirtualNetwork.AddressPrefix}
 		}
 	}
-	return currentresourceFields
+	return currentresourceVNFields
 }
 
 var VINquery armresourcegraph.QueryRequest
 var VINqueryoptions *armresourcegraph.ClientResourcesOptions
 
-func GetAllVirtualNetworkInterfaces(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceFields map[int][]string) {
+func GetAllVirtualNetworkInterfaces(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceVNIFields map[int][]string) {
 	var currentResourceVirtualNetworkInterface VirtualNetworkInterface
 	VINquerytext := "Resources | where type =~ 'Microsoft.Network/networkInterfaces' | project name, privateip = (properties['ipConfigurations'][0]['properties']['privateIPAddress']), resourceGroup, publicip = (properties['ipConfigurations'][0]['properties']['publicIPAddress']['id'])"
 	VINquery.Query = &VINquerytext
@@ -145,22 +145,22 @@ func GetAllVirtualNetworkInterfaces(resourceclientvariable *armresourcegraph.Cli
 		fmt.Println("Error unmarshaling resource data.", resourceerr)
 		return
 	} else {
-		currentresourceFields := make(map[int][]string)
+		currentresourceVNIFields := make(map[int][]string)
 		for i, resourceumIter := range resourceumData {
 			currentResourceVirtualNetworkInterface.VNIName = resourceumIter["name"].(string)
 			currentResourceVirtualNetworkInterface.PrivateIP = resourceumIter["privateip"].(string)
 			currentResourceVirtualNetworkInterface.PublicIPID = resourceumIter["publicip"].(string)
 			currentResourceVirtualNetworkInterface.ResGroup = resourceumIter["resourceGroup"].(string)
-			currentresourceFields[i] = []string{currentResourceVirtualNetworkInterface.VNIName, currentResourceVirtualNetworkInterface.PrivateIP, currentResourceVirtualNetworkInterface.PublicIPID}
+			currentresourceVNIFields[i] = []string{currentResourceVirtualNetworkInterface.VNIName, currentResourceVirtualNetworkInterface.PrivateIP, currentResourceVirtualNetworkInterface.ResGroup, currentResourceVirtualNetworkInterface.PublicIPID}
 		}
 	}
-	return currentresourceFields
+	return currentresourceVNIFields
 }
 
 var PIPquery armresourcegraph.QueryRequest
 var PIPqueryoptions *armresourcegraph.ClientResourcesOptions
 
-func GetAllPublicIPs(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceFields map[int][]string) {
+func GetAllPublicIPs(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourcePIPFields map[int][]string) {
 	var currentResourcePublicIP PublicIPAttributes
 	PIPquerytext := "Resources | where type =~ 'Microsoft.Network/publicIPAddresses' | project id, resourceGroup, subscriptionId, actualip = (properties['ipAddress'])"
 	PIPquery.Query = &PIPquerytext
@@ -177,21 +177,21 @@ func GetAllPublicIPs(resourceclientvariable *armresourcegraph.Client, subscripti
 		fmt.Println("Error unmarshaling resource data.", resourceerr)
 		return
 	} else {
-		currentresourceFields := make(map[int][]string)
+		currentresourcePIPFields := make(map[int][]string)
 		for i, resourceumIter := range resourceumData {
 			currentResourcePublicIP.IPID = resourceumIter["id"].(string)
 			currentResourcePublicIP.ResGroup = resourceumIter["resourceGroup"].(string)
 			currentResourcePublicIP.ActualPublicIP = resourceumIter["actualip"].(string)
-			currentresourceFields[i] = []string{currentResourcePublicIP.IPID, currentResourcePublicIP.ResGroup, currentResourcePublicIP.ActualPublicIP}
+			currentresourcePIPFields[i] = []string{currentResourcePublicIP.IPID, currentResourcePublicIP.ResGroup, currentResourcePublicIP.ActualPublicIP}
 		}
 	}
-	return currentresourceFields
+	return currentresourcePIPFields
 }
 
 var NSGquery armresourcegraph.QueryRequest
 var NSGqueryoptions *armresourcegraph.ClientResourcesOptions
 
-func GetAllNSGs(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceFields map[int][]string) {
+func GetAllNSGs(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceNSGFields map[int][]string) {
 	var currentResourceNSG NetworkSecurityGroups
 	NSGquerytext := "where type =~ 'Microsoft.Network/networkSecurityGroups' | project name, resourceGroup, attachedinterface = (properties['networkInterfaces'][0]['id'])"
 	NSGquery.Query = &NSGquerytext
@@ -208,13 +208,13 @@ func GetAllNSGs(resourceclientvariable *armresourcegraph.Client, subscriptionid 
 		fmt.Println("Error unmarshaling resource data.", resourceerr)
 		return
 	} else {
-		currentresourceFields := make(map[int][]string)
+		currentresourceNSGFields := make(map[int][]string)
 		for i, resourceumIter := range resourceumData {
 			currentResourceNSG.NSGName = resourceumIter["name"].(string)
 			currentResourceNSG.ResGroup = resourceumIter["resourceGroup"].(string)
 			currentResourceNSG.AttachedNetworkInterface = resourceumIter["attachedinterface"].(string)
-			currentresourceFields[i] = []string{currentResourceNSG.NSGName, currentResourceNSG.ResGroup, currentResourceNSG.AttachedNetworkInterface}
+			currentresourceNSGFields[i] = []string{currentResourceNSG.NSGName, currentResourceNSG.ResGroup, currentResourceNSG.AttachedNetworkInterface}
 		}
 	}
-	return currentresourceFields
+	return currentresourceNSGFields
 }

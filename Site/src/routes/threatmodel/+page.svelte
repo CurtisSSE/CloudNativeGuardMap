@@ -139,6 +139,10 @@ let ctx: CanvasRenderingContext2D;
 async function generateThreatModel() {
     await FunctionPersist.azureToggleThreatModelActualState();
     await FunctionPersist.azureSetResourceVirtualMachines();
+    await FunctionPersist.azureSetResourceVirtualNetworks();
+    await FunctionPersist.azureSetResourceVirtualNetworkInterfaces();
+    await FunctionPersist.azureSetResourcePublicIPs();
+    await FunctionPersist.azureSetResourceNSGs();
     threatModelGeneratedActual.set(true);
     await tick();
     ctx = canvas.getContext("2d") as CanvasRenderingContext2D;

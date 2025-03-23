@@ -108,7 +108,7 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"SubidData": subiddataTransfer})
 	})
 
-	siteRouter.POST("/resources-vm-request", func(c *gin.Context) {
+	siteRouter.POST("/resources-request", func(c *gin.Context) {
 		//var returnedVMOutputString string
 		if Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient == nil {
 			log.Fatal("ResourceFactoryClient not properly initialized (nil)")
@@ -135,7 +135,7 @@ func main() {
 			var currentreturnedPublicIPIDs []string
 			// PIP sep
 			currentresourcesPublicIPs := Compute.GetAllPublicIPs(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
-			var currentreturnedIPIDs []string
+			var currentreturnedPIPIDs []string
 			var currentreturnedPIPResGroups []string
 			var currentreturnedActualPublicIPs []string
 			// NSG sep
@@ -157,14 +157,64 @@ func main() {
 			for i := range currentresourcesNetworks {
 				currentreturnedVNNames = append(currentreturnedVNNames, currentresourcesNetworks[i][0])
 				currentreturnedVNResGroups = append(currentreturnedVNResGroups, currentresourcesNetworks[i][1])
-				currentreturned
+				currentreturnedIPAddresses = append(currentreturnedIPAddresses, currentresourcesNetworks[i][2])
+				currentreturnedAddressPrefixes = append(currentreturnedAddressPrefixes, currentresourcesNetworks[i][3])
 			}
-			var buildStringOutput []string
+
+			for i := range currentresourcesNetworkInterfaces {
+				currentreturnedVNINames = append(currentreturnedVNINames, currentresourcesNetworkInterfaces[i][0])
+				currentreturnedPrivateIPs = append(currentreturnedPrivateIPs, currentresourcesNetworkInterfaces[i][1])
+				currentreturnedPublicIPIDs = append(currentreturnedPublicIPIDs, currentresourcesNetworkInterfaces[i][2])
+			}
+
+			for i := range currentresourcesPublicIPs {
+				currentreturnedPIPIDs = append(currentreturnedPIPIDs, currentresourcesPublicIPs[i][0])
+				currentreturnedPIPResGroups = append(currentreturnedPIPResGroups, currentresourcesPublicIPs[i][1])
+				currentreturnedActualPublicIPs = append(currentreturnedActualPublicIPs, currentresourcesPublicIPs[i][2])
+			}
+
+			for i := range currentresourcesNSGs {
+				currentreturnedNSGNames = append(currentreturnedNSGNames, currentresourcesNSGs[i][0])
+				currentreturnedNSGResGroups = append(currentreturnedNSGResGroups, currentresourcesNSGs[i][1])
+				currentreturnedAttachedNIs = append(currentreturnedAttachedNIs, currentresourcesNSGs[i][2])
+			}
+
+			var vmstringOutput []string
 			for i := range currentreturnedVMNames {
-				buildStringOutput = append(buildStringOutput, currentreturnedVMNames[i]+" "+currentreturnedResGroups[i]+" "+currentreturnedOperatingSystems[i]+" "+currentreturnedAdminUsernames[i]+" "+currentreturnedNetworkInterfaces[i]+" "+currentreturnedOsDisks[i]+" "+currentreturnedDataDisks[i])
+				vmstringOutput = append(vmstringOutput, currentreturnedVMNames[i]+" "+currentreturnedResGroups[i]+" "+currentreturnedOperatingSystems[i]+" "+currentreturnedAdminUsernames[i]+" "+currentreturnedNetworkInterfaces[i]+" "+currentreturnedOsDisks[i]+" "+currentreturnedDataDisks[i])
 			}
-			fmt.Println(buildStringOutput)
-			c.JSON(http.StatusOK, gin.H{"output": buildStringOutput})
+
+			var vnstringOutput []string
+			for i := range currentreturnedVNNames {
+				vnstringOutput = append(vnstringOutput, currentreturnedVNNames[i]+" "+currentreturnedVNResGroups[i]+" "+currentreturnedIPAddresses[i]+" "+currentreturnedAddressPrefixes[i])
+			}
+
+			var nistringOutput []string
+			for i := range currentreturnedVNINames {
+				nistringOutput = append(nistringOutput, currentreturnedVNINames[i]+" "+currentreturnedPrivateIPs[i]+" "+currentreturnedPublicIPIDs[i])
+			}
+
+			var pipstringOutput []string
+			for i := range currentreturnedPIPIDs {
+				pipstringOutput = append(pipstringOutput, currentreturnedPIPIDs[i]+" "+currentreturnedPIPResGroups[i]+" "+currentreturnedActualPublicIPs[i])
+			}
+
+			var nsgstringOutput []string
+			for i := range currentreturnedNSGNames {
+				nsgstringOutput = append(nsgstringOutput, currentreturnedNSGNames[i]+" "+currentreturnedNSGResGroups[i]+" "+currentreturnedAttachedNIs[i])
+			}
+
+			var firstStringOutput []string
+			var actualStringOutput []string
+			firstStringOutput = append(firstStringOutput, vmstringOutput...)
+			vnstringOutput = append(firstStringOutput, vnstringOutput...)
+			nistringOutput = append(vnstringOutput, nistringOutput...)
+			pipstringOutput = append(nistringOutput, pipstringOutput...)
+			nsgstringOutput = append(pipstringOutput, nsgstringOutput...)
+			actualStringOutput = append(actualStringOutput, nsgstringOutput...)
+
+			fmt.Println(actualStringOutput)
+			c.JSON(http.StatusOK, gin.H{"output": actualStringOutput})
 		}
 	})
 
