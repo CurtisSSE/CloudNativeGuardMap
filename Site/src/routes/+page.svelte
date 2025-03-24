@@ -8,7 +8,7 @@
     // Import individual recommendation states.
     import { advisorRecommendationsGeneratedState, recExpandButton, zeroRecs, recName, recID, shortDesc, impactedField, impactfromAlert, impactedValue, expandedAdvisorButtonIdx, existingRecommendations} from "../stores/persistentsession.js";
     // Import individual resources states.
-    import { resourcesGeneratedState, existingResources } from "../stores/persistentsession.js";
+    import { resourcesGeneratedState } from "../stores/persistentsession.js";
     // Import individual threat model states.
     import { threatModelGeneratedState } from "../stores/persistentsession.js";
     // Helper variables.
@@ -72,8 +72,8 @@
             </button>
 
             {#if $expandedAdvisorButtonIdx === i}
-            <div class="mt-1 p-5 rounded-b-lg border border-t-0 border-gray-300 bg-white shadow-sm animate-expandVertical">
-                <div class="grid grid-cols-1 gap-3">
+            <div class="pt-5 px-16 animate-expandVertical">
+                <div class="grid gap-3">
                     <div class="flex">
                         <p class="font-bold w-40">Alert ID:</p>
                         <span class="text-gray-700 font-mono">{$recName[i]}</span>
@@ -110,14 +110,6 @@
         </center>
     {/snippet}
 
-    {#snippet displayResourcesSnippet()}
-    <center><br/>
-    <button class="rounded-lg border-2 border-black bg-blue-300 font-semibold" onclick={() => {FunctionPersist.azureReleaseResources(); FunctionPersist.azureToggleResourcesState() }}>Cancel and return to menu</button><br/><br/>
-    <p class="font-semibold">Azure Resources:</p><br/>
-    {$existingResources}
-    </center>
-    {/snippet}
-
     <!-- If the user is logged in and a subscription is not selected. -->
     {#if $loggedInUser != '' && $subscriptionButtonState == false}
     <center>
@@ -140,11 +132,6 @@
     <!-- If the user is logged in, has selected a subscription and has selected to generate security advisor recommendations. -->
     {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == true && $resourcesGeneratedState == false && $threatModelGeneratedState == false}
     {@render displayAdvisorRecommendationsSnippet()}
-
-
-    <!-- If the user is logged in, has selected a subscription and has selected to display resources in their subscription. -->
-    {:else if $loggedInUser != '' && $subscriptionButtonState == true && $subscriptionIsSelectedState == true && $advisorRecommendationsGeneratedState == false && $resourcesGeneratedState == true && $threatModelGeneratedState == false}
-    {@render displayResourcesSnippet()}
 
     <!-- If the user is not logged in. -->
     {:else if $loggedInUser == ''}

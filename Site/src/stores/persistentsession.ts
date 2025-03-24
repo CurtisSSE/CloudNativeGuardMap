@@ -39,11 +39,11 @@ export const recExpandButton = writable<boolean>(false);
 export const zeroRecs = writable<boolean>(true);
 
 // Azure Resources variables
-export const existingResources = writable<string[]>([]);
 export const resourcesGeneratedState = writable<boolean>(false);
 
 // Azure VM states
 export const zeroVMs = writable<boolean>(true);
+export const existingVMs = writable<string[]>([]);
 export const vmNames = writable<string[]>([]);
 export const resGroups = writable<string[]>([]);
 export const operatingSystems = writable<string[]>([]);
@@ -54,6 +54,7 @@ export const dataDisks = writable<string[]>([]);
 
 // Azure VN states
 export const zeroVNs = writable<boolean>(true);
+export const existingVNs = writable<string[]>([]);
 export const vnNames = writable<string[]>([]);
 export const vnResGroups = writable<string[]>([]);
 export const vnIPAddresses = writable<string[]>([]);
@@ -61,18 +62,21 @@ export const vnAddressPrefixes = writable<string[]>([]);
 
 // Azure VNI states
 export const zeroVNIs = writable<boolean>(true);
+export const existingVNIs = writable<string[]>([]);
 export const vniNames = writable<string[]>([]);
 export const vniPrivateIPs = writable<string[]>([]);
 export const vniPublicIPIDs = writable<string[]>([]);
 
 // Azure PIP states
 export const zeroPIPs = writable<boolean>(true);
+export const existingPIPs = writable<string[]>([]);
 export const pipPublicIPIDs = writable<string[]>([]);
 export const pipResGroups = writable<string[]>([]);
 export const actualPublicIPs = writable<string[]>([]);
 
 // Azure NSG states
 export const zeroNSGs = writable<boolean>(true);
+export const existingNSGs = writable<string[]>([]);
 export const nsgNames = writable<string[]>([]);
 export const nsgResGroups = writable<string[]>([]);
 export const nsgAttachedNIs = writable<string[]>([]);
@@ -83,6 +87,6 @@ export const threatModelGeneratedState = writable<boolean>(false);
 export const threatModelGeneratedActual = writable<boolean>(false);
 
 // Threat Model ThreatProcess positions
-export const currentposxmod = writable<number>(0);
-export const currentposx = writable<number>(200);
-export const currentposy = writable<number>(100);
+export const currentposxmod = writable<number>(150);
+export const currentposx = writable<number>(140);
+export const currentposy = writable<number>(150);

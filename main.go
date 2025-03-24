@@ -109,11 +109,9 @@ func main() {
 	})
 
 	siteRouter.POST("/resources-request", func(c *gin.Context) {
-		//var returnedVMOutputString string
 		if Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient == nil {
 			log.Fatal("ResourceFactoryClient not properly initialized (nil)")
 		} else {
-			// VM sep
 			currentresources := Compute.GetAllVirtualMachines(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
 			var currentreturnedVMNames []string
 			var currentreturnedResGroups []string
@@ -122,27 +120,6 @@ func main() {
 			var currentreturnedNetworkInterfaces []string
 			var currentreturnedOsDisks []string
 			var currentreturnedDataDisks []string
-			// VN sep
-			currentresourcesNetworks := Compute.GetAllVirtualNetworks(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
-			var currentreturnedVNNames []string
-			var currentreturnedVNResGroups []string
-			var currentreturnedIPAddresses []string
-			var currentreturnedAddressPrefixes []string
-			// VNI sep
-			currentresourcesNetworkInterfaces := Compute.GetAllVirtualNetworkInterfaces(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
-			var currentreturnedVNINames []string
-			var currentreturnedPrivateIPs []string
-			var currentreturnedPublicIPIDs []string
-			// PIP sep
-			currentresourcesPublicIPs := Compute.GetAllPublicIPs(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
-			var currentreturnedPIPIDs []string
-			var currentreturnedPIPResGroups []string
-			var currentreturnedActualPublicIPs []string
-			// NSG sep
-			currentresourcesNSGs := Compute.GetAllNSGs(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
-			var currentreturnedNSGNames []string
-			var currentreturnedNSGResGroups []string
-			var currentreturnedAttachedNIs []string
 
 			for i := range currentresources {
 				currentreturnedVMNames = append(currentreturnedVMNames, currentresources[i][0])
@@ -154,67 +131,115 @@ func main() {
 				currentreturnedDataDisks = append(currentreturnedDataDisks, currentresources[i][6])
 			}
 
-			for i := range currentresourcesNetworks {
-				currentreturnedVNNames = append(currentreturnedVNNames, currentresourcesNetworks[i][0])
-				currentreturnedVNResGroups = append(currentreturnedVNResGroups, currentresourcesNetworks[i][1])
-				currentreturnedIPAddresses = append(currentreturnedIPAddresses, currentresourcesNetworks[i][2])
-				currentreturnedAddressPrefixes = append(currentreturnedAddressPrefixes, currentresourcesNetworks[i][3])
-			}
-
-			for i := range currentresourcesNetworkInterfaces {
-				currentreturnedVNINames = append(currentreturnedVNINames, currentresourcesNetworkInterfaces[i][0])
-				currentreturnedPrivateIPs = append(currentreturnedPrivateIPs, currentresourcesNetworkInterfaces[i][1])
-				currentreturnedPublicIPIDs = append(currentreturnedPublicIPIDs, currentresourcesNetworkInterfaces[i][2])
-			}
-
-			for i := range currentresourcesPublicIPs {
-				currentreturnedPIPIDs = append(currentreturnedPIPIDs, currentresourcesPublicIPs[i][0])
-				currentreturnedPIPResGroups = append(currentreturnedPIPResGroups, currentresourcesPublicIPs[i][1])
-				currentreturnedActualPublicIPs = append(currentreturnedActualPublicIPs, currentresourcesPublicIPs[i][2])
-			}
-
-			for i := range currentresourcesNSGs {
-				currentreturnedNSGNames = append(currentreturnedNSGNames, currentresourcesNSGs[i][0])
-				currentreturnedNSGResGroups = append(currentreturnedNSGResGroups, currentresourcesNSGs[i][1])
-				currentreturnedAttachedNIs = append(currentreturnedAttachedNIs, currentresourcesNSGs[i][2])
-			}
-
 			var vmstringOutput []string
-			for i := range currentreturnedVMNames {
-				vmstringOutput = append(vmstringOutput, currentreturnedVMNames[i]+" "+currentreturnedResGroups[i]+" "+currentreturnedOperatingSystems[i]+" "+currentreturnedAdminUsernames[i]+" "+currentreturnedNetworkInterfaces[i]+" "+currentreturnedOsDisks[i]+" "+currentreturnedDataDisks[i])
+			for n := range currentreturnedVMNames {
+				vmstringOutput = append(vmstringOutput, currentreturnedVMNames[n]+" "+currentreturnedResGroups[n]+" "+currentreturnedOperatingSystems[n]+" "+currentreturnedAdminUsernames[n]+" "+currentreturnedNetworkInterfaces[n]+" "+currentreturnedOsDisks[n]+" "+currentreturnedDataDisks[n])
+			}
+
+			fmt.Println(vmstringOutput)
+			c.JSON(http.StatusOK, gin.H{"output": vmstringOutput})
+		}
+	})
+
+	siteRouter.POST("/vn-request", func(c *gin.Context) {
+		if Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient == nil {
+			log.Fatal("ResourceFactoryClient not properly initialized (nil)")
+		} else {
+			currentresourcesNetworks := Compute.GetAllVirtualNetworks(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
+			var currentreturnedVNNames []string
+			var currentreturnedVNResGroups []string
+			var currentreturnedIPAddresses []string
+			var currentreturnedAddressPrefixes []string
+
+			for j := range currentresourcesNetworks {
+				currentreturnedVNNames = append(currentreturnedVNNames, currentresourcesNetworks[j][0])
+				currentreturnedVNResGroups = append(currentreturnedVNResGroups, currentresourcesNetworks[j][1])
+				currentreturnedIPAddresses = append(currentreturnedIPAddresses, currentresourcesNetworks[j][2])
+				currentreturnedAddressPrefixes = append(currentreturnedAddressPrefixes, currentresourcesNetworks[j][3])
 			}
 
 			var vnstringOutput []string
-			for i := range currentreturnedVNNames {
-				vnstringOutput = append(vnstringOutput, currentreturnedVNNames[i]+" "+currentreturnedVNResGroups[i]+" "+currentreturnedIPAddresses[i]+" "+currentreturnedAddressPrefixes[i])
+			for o := range currentreturnedVNNames {
+				vnstringOutput = append(vnstringOutput, currentreturnedVNNames[o]+" "+currentreturnedVNResGroups[o]+" "+currentreturnedIPAddresses[o]+" "+currentreturnedAddressPrefixes[o])
+			}
+
+			fmt.Println(vnstringOutput)
+			c.JSON(http.StatusOK, gin.H{"output": vnstringOutput})
+		}
+	})
+
+	siteRouter.POST("/vni-request", func(c *gin.Context) {
+		if Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient == nil {
+			log.Fatal("ResourceFactoryClient not properly initialized (nil)")
+		} else {
+			currentresourcesNetworkInterfaces := Compute.GetAllVirtualNetworkInterfaces(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
+			var currentreturnedVNINames []string
+			var currentreturnedPrivateIPs []string
+			var currentreturnedPublicIPIDs []string
+
+			for k := range currentresourcesNetworkInterfaces {
+				currentreturnedVNINames = append(currentreturnedVNINames, currentresourcesNetworkInterfaces[k][0])
+				currentreturnedPrivateIPs = append(currentreturnedPrivateIPs, currentresourcesNetworkInterfaces[k][1])
+				currentreturnedPublicIPIDs = append(currentreturnedPublicIPIDs, currentresourcesNetworkInterfaces[k][2])
 			}
 
 			var nistringOutput []string
-			for i := range currentreturnedVNINames {
-				nistringOutput = append(nistringOutput, currentreturnedVNINames[i]+" "+currentreturnedPrivateIPs[i]+" "+currentreturnedPublicIPIDs[i])
+			for p := range currentreturnedVNINames {
+				nistringOutput = append(nistringOutput, currentreturnedVNINames[p]+" "+currentreturnedPrivateIPs[p]+" "+currentreturnedPublicIPIDs[p])
+			}
+
+			fmt.Println(nistringOutput)
+			c.JSON(http.StatusOK, gin.H{"output": nistringOutput})
+		}
+	})
+
+	siteRouter.POST("/pip-request", func(c *gin.Context) {
+		if Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient == nil {
+			log.Fatal("ResourceFactoryClient not properly initialized (nil)")
+		} else {
+			currentresourcesPublicIPs := Compute.GetAllPublicIPs(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
+			var currentreturnedPIPIDs []string
+			var currentreturnedPIPResGroups []string
+			var currentreturnedActualPublicIPs []string
+
+			for l := range currentresourcesPublicIPs {
+				currentreturnedPIPIDs = append(currentreturnedPIPIDs, currentresourcesPublicIPs[l][0])
+				currentreturnedPIPResGroups = append(currentreturnedPIPResGroups, currentresourcesPublicIPs[l][1])
+				currentreturnedActualPublicIPs = append(currentreturnedActualPublicIPs, currentresourcesPublicIPs[l][2])
 			}
 
 			var pipstringOutput []string
-			for i := range currentreturnedPIPIDs {
-				pipstringOutput = append(pipstringOutput, currentreturnedPIPIDs[i]+" "+currentreturnedPIPResGroups[i]+" "+currentreturnedActualPublicIPs[i])
+			for q := range currentreturnedPIPIDs {
+				pipstringOutput = append(pipstringOutput, currentreturnedPIPIDs[q]+" "+currentreturnedPIPResGroups[q]+" "+currentreturnedActualPublicIPs[q])
+			}
+
+			fmt.Println(pipstringOutput)
+			c.JSON(http.StatusOK, gin.H{"output": pipstringOutput})
+		}
+	})
+
+	siteRouter.POST("/nsg-request", func(c *gin.Context) {
+		if Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient == nil {
+			log.Fatal("ResourceFactoryClient not properly initialized (nil)")
+		} else {
+			currentresourcesNSGs := Compute.GetAllNSGs(Auth.CurrentResourceGraphFactoryState.ResourceFactoryClient, &Auth.CurrentResourceGraphFactoryState.ResourceFactoryCurrentSubscriptionID)
+			var currentreturnedNSGNames []string
+			var currentreturnedNSGResGroups []string
+			var currentreturnedAttachedNIs []string
+
+			for m := range currentresourcesNSGs {
+				currentreturnedNSGNames = append(currentreturnedNSGNames, currentresourcesNSGs[m][0])
+				currentreturnedNSGResGroups = append(currentreturnedNSGResGroups, currentresourcesNSGs[m][1])
+				currentreturnedAttachedNIs = append(currentreturnedAttachedNIs, currentresourcesNSGs[m][2])
 			}
 
 			var nsgstringOutput []string
-			for i := range currentreturnedNSGNames {
-				nsgstringOutput = append(nsgstringOutput, currentreturnedNSGNames[i]+" "+currentreturnedNSGResGroups[i]+" "+currentreturnedAttachedNIs[i])
+			for r := range currentreturnedNSGNames {
+				nsgstringOutput = append(nsgstringOutput, currentreturnedNSGNames[r]+" "+currentreturnedNSGResGroups[r]+" "+currentreturnedAttachedNIs[r])
 			}
 
-			var firstStringOutput []string
-			var actualStringOutput []string
-			firstStringOutput = append(firstStringOutput, vmstringOutput...)
-			vnstringOutput = append(firstStringOutput, vnstringOutput...)
-			nistringOutput = append(vnstringOutput, nistringOutput...)
-			pipstringOutput = append(nistringOutput, pipstringOutput...)
-			nsgstringOutput = append(pipstringOutput, nsgstringOutput...)
-			actualStringOutput = append(actualStringOutput, nsgstringOutput...)
-
-			fmt.Println(actualStringOutput)
-			c.JSON(http.StatusOK, gin.H{"output": actualStringOutput})
+			fmt.Println(nsgstringOutput)
+			c.JSON(http.StatusOK, gin.H{"output": nsgstringOutput})
 		}
 	})
 

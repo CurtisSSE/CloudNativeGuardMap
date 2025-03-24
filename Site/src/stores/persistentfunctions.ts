@@ -1,13 +1,23 @@
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 // Svelte stores for threat model related variables.
-import { threatModelGeneratedState, threatModelGeneratedActual, zeroVMs, vmNames, resGroups, operatingSystems, adminUsernames, networkInterfaces, osDisks, dataDisks, zeroVNIs, vnNames, vnResGroups, vnIPAddresses, vnAddressPrefixes, zeroVNs, vniNames, vniPrivateIPs, vniPublicIPIDs, zeroPIPs, pipPublicIPIDs, pipResGroups, actualPublicIPs, zeroNSGs, nsgNames, nsgResGroups, nsgAttachedNIs} from "../stores/persistentsession.js";
+import { threatModelGeneratedState, threatModelGeneratedActual } from "../stores/persistentsession.js"
+// Svelte stores for Virtual Machine states.
+import { existingVMs, zeroVMs, vmNames, resGroups, operatingSystems, adminUsernames, networkInterfaces, osDisks, dataDisks } from "../stores/persistentsession.js"
+// Svelte stores for Virtual Network states.
+import { existingVNs, zeroVNs, vnNames, vnResGroups, vnIPAddresses, vnAddressPrefixes } from "../stores/persistentsession.js"
+// Svelte stores for Virtual Network Interface states.
+import { existingVNIs, zeroVNIs, vniNames, vniPrivateIPs, vniPublicIPIDs } from '../stores/persistentsession.js'
+// Svelte stores for Public IP states.
+import { existingPIPs, zeroPIPs, pipPublicIPIDs, pipResGroups, actualPublicIPs } from '../stores/persistentsession.js';
+// Svelte stores for Network Security Group states.
+import { existingNSGs, zeroNSGs, nsgNames, nsgResGroups, nsgAttachedNIs } from '../stores/persistentsession.js';
 // Svelte stores for Resources.
-import { existingResources, resourcesGeneratedState } from "../stores/persistentsession.js";
+import { resourcesGeneratedState } from "../stores/persistentsession.js";
 // Svelte stores for Subscriptions.
 import { existingSubscriptions, subscriptionButtonState, selectedSubscriptionName, selectedSubscriptionID, subscriptionIsSelectedState } from "../stores/persistentsession.js";
 // Svelte stores for Advisor.
-import { recExpandButton, zeroRecs, existingRecommendations, advisorRecommendationsGeneratedState, recName, recID, shortDesc, shortSol, longDesc, actionsDesc, actionsType, actionsCaption, actionsLink, actionsMetaID, impactfromAlert, impactedField, impactedValue, potentialBenefits } from "../stores/persistentsession.js";
+import { existingRecommendations, recExpandButton, zeroRecs, advisorRecommendationsGeneratedState, recName, recID, shortDesc, shortSol, longDesc, actionsDesc, actionsType, actionsCaption, actionsLink, actionsMetaID, impactfromAlert, impactedField, impactedValue, potentialBenefits } from "../stores/persistentsession.js";
 // Svelte stores for button states.
 import { expandedAdvisorButtonIdx } from "../stores/persistentsession.js"
 
@@ -69,14 +79,47 @@ export async function azureResourcesRequest() {
         if (response.ok) {
         let resources = await response.json();
         let resourcesFromGin = resources.output;
-        existingResources.update(($existingResources) => [...$existingResources, ...resourcesFromGin])
+        existingVMs.update(($existingVMs) => [...$existingVMs, ...resourcesFromGin])
+        await fetch("http://localhost:5000/vn-request", {method: "POST"}).then(async (response) => {
+            if (response.ok) {
+                let resourcesvn = await response.json();
+                let resourcesFromGinvn = resourcesvn.output;
+                existingVNs.update(($existingVNs) => [...$existingVNs, ...resourcesFromGinvn])
+                await fetch("http://localhost:5000/vni-request", {method: "POST"}).then(async (response) => {
+                    if (response.ok) {
+                        let resourcesvni = await response.json();
+                        let resourcesFromGinvni = resourcesvni.output;
+                        existingVNIs.update(($existingVNIs) => [...$existingVNIs, ...resourcesFromGinvni])
+                        await fetch("http://localhost:5000/pip-request", {method: "POST"}).then(async (response) => {
+                            if (response.ok) {
+                                let resourcespip = await response.json();
+                                let resourcesFromGinpip = resourcespip.output;
+                                existingPIPs.update(($existingPIPs) => [...$existingPIPs, ...resourcesFromGinpip])
+                                await fetch("http://localhost:5000/nsg-request", {method: "POST"}).then(async (response) => {
+                                    if (response.ok) {
+                                        let resourcesnsg = await response.json();
+                                        let resourcesFromGinnsg = resourcesnsg.output;
+                                        existingNSGs.update(($existingNSGs) => [...$existingNSGs, ...resourcesFromGinnsg])
+                                    }
+                                })
+                            }
+                        })
+                    }
+                })
+            }
+        })
         };
     })
     await tick();
 }
 
 export async function azureReleaseResources() {
-    existingResources.set([]);
+    existingVMs.set([]);
+    azureReleaseVirtualMachines();
+    azureReleaseVirtualNetworks();
+    azureReleaseVirtualNetworkInterfaces();
+    azureReleasePublicIPs();
+    azureReleaseNSGs();
 }
 
     // Sets the Azure subscription state amongst Svelte stores and other components.
@@ -115,12 +158,11 @@ export async function azureToggleThreatModelState() {
 
 export async function azureSetResourceVirtualMachines() {
     await azureReleaseVirtualMachines();
-    await azureReleaseResources();
-    await azureResourcesRequest();
-    if (get(existingResources).length > 0) {
+    if (get(existingVMs).length > 0) {
         zeroVMs.set(false);
-        for (let i = 0; i < get(existingResources).length; i++) {
-            let vmShape = get(existingResources)[i].split(" ");
+        for (let i = 0; i < get(existingVMs).length; i++) {
+            let eVM = get(existingVMs)[i]
+            let vmShape = eVM.split(" ");
             vmNames.update(($vmNames) => [...$vmNames, vmShape[0]]);
             resGroups.update(($resGroups) => [...$resGroups, vmShape[1]]);
             operatingSystems.update(($operatingSystems) => [...$operatingSystems, vmShape[2]]);
@@ -146,16 +188,15 @@ export async function azureReleaseVirtualMachines() {
 
 export async function azureSetResourceVirtualNetworks() {
     await azureReleaseVirtualNetworks();
-    await azureReleaseResources();
-    await azureResourcesRequest();
-    if (get(existingResources).length > 0) {
+    if (get(existingVNs).length > 0) {
         zeroVNs.set(false);
-        for (let i = 0; i < get(existingResources).length; i++) {
-            let vnShape = get(existingResources)[i].split(" ");
-            vnNames.update(($vnNames) => [...$vnNames, vnShape[7]]);
-            vnResGroups.update(($vnResGroups) => [...$vnResGroups, vnShape[8]]);
-            vnIPAddresses.update(($vnIPAddresses) => [...$vnIPAddresses, vnShape[9]]);
-            vnAddressPrefixes.update(($vnAddressPrefixes) => [...$vnAddressPrefixes, vnShape[10]]);
+        for (let i = 0; i < get(existingVNs).length; i++) {
+            let eVN = get(existingVNs)[i]
+            let vnShape = eVN.split(" ");
+            vnNames.update(($vnNames) => [...$vnNames, vnShape[0]]);
+            vnResGroups.update(($vnResGroups) => [...$vnResGroups, vnShape[1]]);
+            vnIPAddresses.update(($vnIPAddresses) => [...$vnIPAddresses, vnShape[2]]);
+            vnAddressPrefixes.update(($vnAddressPrefixes) => [...$vnAddressPrefixes, vnShape[3]]);
         }
     } else {
         zeroVNs.set(true);
@@ -174,15 +215,14 @@ export async function azureReleaseVirtualNetworks() {
 
 export async function azureSetResourceVirtualNetworkInterfaces() {
     await azureReleaseVirtualNetworkInterfaces();
-    await azureReleaseResources();
-    await azureResourcesRequest();
-    if (get(existingResources).length > 0) {
+    if (get(existingVNIs).length > 0) {
         zeroVNIs.set(false);
-        for (let i = 0; i < get(existingResources).length; i++) {
-            let vniShape = get(existingResources)[i].split(" ");
-            vniNames.update(($vniNames) => [...$vniNames, vniShape[11]]);
-            vniPrivateIPs.update(($vniPrivateIPs) => [...$vniPrivateIPs, vniShape[12]]);
-            vniPublicIPIDs.update(($vniPublicIPIDs) => [...$vniPublicIPIDs, vniShape[13]]);
+        for (let i = 0; i < get(existingVNIs).length; i++) {
+            let eVNI = get(existingVNIs)[i]
+            let vniShape = eVNI.split(" ");
+            vniNames.update(($vniNames) => [...$vniNames, vniShape[0]]);
+            vniPrivateIPs.update(($vniPrivateIPs) => [...$vniPrivateIPs, vniShape[1]]);
+            vniPublicIPIDs.update(($vniPublicIPIDs) => [...$vniPublicIPIDs, vniShape[2]]);
         }
     } else {
         zeroVNIs.set(true);
@@ -199,15 +239,14 @@ export async function azureReleaseVirtualNetworkInterfaces() {
 
 export async function azureSetResourcePublicIPs() {
     await azureReleasePublicIPs();
-    await azureReleaseResources();
-    await azureResourcesRequest();
-    if (get(existingResources).length > 0) {
+    if (get(existingPIPs).length > 0) {
         zeroPIPs.set(false);
-        for (let i = 0; i < get(existingResources).length; i++) {
-            let pipShape = get(existingResources)[i].split(" ");
-            pipPublicIPIDs.update(($pipPublicIPIDs) => [...$pipPublicIPIDs, pipShape[14]]);
-            pipResGroups.update(($pipResGroups) => [...$pipResGroups, pipShape[15]]);
-            actualPublicIPs.update(($actualPublicIPs) => [...$actualPublicIPs, pipShape[16]]);
+        for (let i = 0; i < get(existingPIPs).length; i++) {
+            let ePIP = get(existingPIPs)[i]
+            let pipShape = ePIP.split(" ");
+            pipPublicIPIDs.update(($pipPublicIPIDs) => [...$pipPublicIPIDs, pipShape[0]]);
+            pipResGroups.update(($pipResGroups) => [...$pipResGroups, pipShape[1]]);
+            actualPublicIPs.update(($actualPublicIPs) => [...$actualPublicIPs, pipShape[2]]);
         }
     }
 }
@@ -222,15 +261,14 @@ export async function azureReleasePublicIPs() {
 
 export async function azureSetResourceNSGs() {
     await azureReleaseNSGs();
-    await azureReleaseResources();
-    await azureResourcesRequest();
-    if (get(existingResources).length > 0) {
+    if (get(existingNSGs).length > 0) {
         zeroNSGs.set(false);
-        for (let i = 0; i < get(existingResources).length; i++) {
-            let nsgShape = get(existingResources)[i].split(" ");
-            nsgNames.update(($nsgNames) => [...$nsgNames, nsgShape[17]]);
-            nsgResGroups.update(($nsgResGroups) => [...$nsgResGroups, nsgShape[18]]);
-            nsgAttachedNIs.update(($nsgAttachedNIs) => [...$nsgAttachedNIs, nsgShape[19]]);
+        for (let i = 0; i < get(existingNSGs).length; i++) {
+            let eNSG = get(existingNSGs)[i]
+            let nsgShape = eNSG.split(" ");
+            nsgNames.update(($nsgNames) => [...$nsgNames, nsgShape[0]]);
+            nsgResGroups.update(($nsgResGroups) => [...$nsgResGroups, nsgShape[1]]);
+            nsgAttachedNIs.update(($nsgAttachedNIs) => [...$nsgAttachedNIs, nsgShape[2]]);
         }
     }
 }
@@ -249,7 +287,7 @@ export async function azureSetAdvisorRecommendations() {
         zeroRecs.set(false);
         for (let i = 0; i < get(existingRecommendations).length; i++) {
             const advisorsections = get(existingRecommendations)[i].split(splitVar);
-            //if (advisorsections[10] == 'Security') {
+            if (advisorsections[10] == 'Security') {
                 recName.update(($recName) => [...$recName, advisorsections[0]]);
                 recID.update(($recID) => [...$recID, advisorsections[1].split('/providers/Microsoft.Advisor/rec')[0]]);
                 shortDesc.update(($shortDesc) => [...$shortDesc, advisorsections[2]]);
@@ -264,10 +302,10 @@ export async function azureSetAdvisorRecommendations() {
                 impactedField.update(($impactedField) => [...$impactedField, advisorsections[11]]);
                 impactedValue.update(($impactedValue) => [...$impactedValue, advisorsections[12]]);
                 potentialBenefits.update(($potentialBenefits) => [...$potentialBenefits, advisorsections[13]]);
-            }
-    } else {
+            }}
+        } else {
         zeroRecs.set(true);
-    }
+        }
     await tick();
 }
 

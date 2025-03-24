@@ -113,7 +113,7 @@ func GetAllVirtualNetworks(resourceclientvariable *armresourcegraph.Client, subs
 		fmt.Println("Error unmarshaling resource data.", resourceerr)
 		return
 	} else {
-		currentresourceVNFields := make(map[int][]string)
+		currentresourceVNFields = make(map[int][]string)
 		for i, resourceumIter := range resourceumData {
 			currentResourceVirtualNetwork.VNName = resourceumIter["name"].(string)
 			currentResourceVirtualNetwork.ResGroup = resourceumIter["resourceGroup"].(string)
@@ -145,7 +145,7 @@ func GetAllVirtualNetworkInterfaces(resourceclientvariable *armresourcegraph.Cli
 		fmt.Println("Error unmarshaling resource data.", resourceerr)
 		return
 	} else {
-		currentresourceVNIFields := make(map[int][]string)
+		currentresourceVNIFields = make(map[int][]string)
 		for i, resourceumIter := range resourceumData {
 			currentResourceVirtualNetworkInterface.VNIName = resourceumIter["name"].(string)
 			currentResourceVirtualNetworkInterface.PrivateIP = resourceumIter["privateip"].(string)
@@ -177,7 +177,7 @@ func GetAllPublicIPs(resourceclientvariable *armresourcegraph.Client, subscripti
 		fmt.Println("Error unmarshaling resource data.", resourceerr)
 		return
 	} else {
-		currentresourcePIPFields := make(map[int][]string)
+		currentresourcePIPFields = make(map[int][]string)
 		for i, resourceumIter := range resourceumData {
 			currentResourcePublicIP.IPID = resourceumIter["id"].(string)
 			currentResourcePublicIP.ResGroup = resourceumIter["resourceGroup"].(string)
@@ -208,7 +208,7 @@ func GetAllNSGs(resourceclientvariable *armresourcegraph.Client, subscriptionid 
 		fmt.Println("Error unmarshaling resource data.", resourceerr)
 		return
 	} else {
-		currentresourceNSGFields := make(map[int][]string)
+		currentresourceNSGFields = make(map[int][]string)
 		for i, resourceumIter := range resourceumData {
 			currentResourceNSG.NSGName = resourceumIter["name"].(string)
 			currentResourceNSG.ResGroup = resourceumIter["resourceGroup"].(string)
