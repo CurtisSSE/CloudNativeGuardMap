@@ -1,7 +1,9 @@
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
+// Svelte auth related stores.
+import { currentposx, currentposxmod, currentposy, loggedInUser, subidfromGin } from '../stores/persistentsession.js';
 // Svelte stores for threat model related variables.
-import { threatModelGeneratedState, threatModelGeneratedActual } from "../stores/persistentsession.js"
+import { threatModelGeneratedState, threatModelButtonState } from "../stores/persistentsession.js"
 // Svelte stores for Virtual Machine states.
 import { existingVMs, zeroVMs, vmNames, resGroups, operatingSystems, adminUsernames, networkInterfaces, osDisks, dataDisks } from "../stores/persistentsession.js"
 // Svelte stores for Virtual Network states.
@@ -23,6 +25,80 @@ import { expandedAdvisorButtonIdx } from "../stores/persistentsession.js"
 
 // Helper variables
 const splitVar = " | "
+
+export async function azureLogin() {
+    const response = await fetch('http://localhost:5000/auth-login', { method: 'POST' });
+    if (response.ok) {
+        let result = await response.json();
+        let strresult = JSON.stringify(result.user.username);
+        loggedInUser.set(strresult.replace(/"/g, ''));
+    }
+    await tick();
+}
+
+export async function azureLogout() {
+    const response = await fetch('http://localhost:5000/auth-logout', { method: 'POST' });
+    if (response.ok) {
+        await response.json();
+        loggedInUser.set('');
+        selectedSubscriptionName.set('');
+        selectedSubscriptionID.set('');
+        subidfromGin.set('');
+        existingSubscriptions.set([]);
+        subscriptionButtonState.set(false);
+        subscriptionIsSelectedState.set(false);
+        advisorRecommendationsGeneratedState.set(false);
+        existingRecommendations.set([]);
+        recName.set([]);
+        recID.set([]);
+        shortDesc.set([]);
+        shortSol.set([]);
+        longDesc.set([]);
+        actionsDesc.set([]);
+        actionsType.set([]);
+        actionsCaption.set([]);
+        actionsLink.set([]);
+        actionsMetaID.set([]);
+        impactfromAlert.set([]);
+        impactedField.set([]);
+        impactedValue.set([]);
+        potentialBenefits.set([]);
+        expandedAdvisorButtonIdx.set(null);
+        recExpandButton.set(false);
+        zeroRecs.set(true);
+        resourcesGeneratedState.set(false);
+        zeroVMs.set(true);
+        existingVMs.set([]);
+        vmNames.set([]);
+        resGroups.set([]);
+        operatingSystems.set([]);
+        adminUsernames.set([]);
+        networkInterfaces.set([]);
+        osDisks.set([]);
+        dataDisks.set([]);
+        zeroVNs.set(true);
+        existingVNIs.set([]);
+        vniNames.set([]);
+        vniPrivateIPs.set([]);
+        vniPublicIPIDs.set([]);
+        zeroPIPs.set(true);
+        existingPIPs.set([]);
+        pipPublicIPIDs.set([]);
+        pipResGroups.set([]);
+        actualPublicIPs.set([]);
+        zeroNSGs.set(true);
+        existingNSGs.set([]);
+        nsgNames.set([]);
+        nsgResGroups.set([]);
+        nsgAttachedNIs.set([]);
+        threatModelButtonState.set(false);
+        threatModelGeneratedState.set(false);
+        currentposxmod.set(150);
+        currentposx.set(140);
+        currentposy.set(150);      
+    }
+    await tick();
+}
 
     // Primary Azure SubscriptionsFactoryClient auth handler and returns list of subscriptions for logged in user's tenant.
 export async function azureStartSubscriptionsAuth() {
@@ -120,6 +196,9 @@ export async function azureReleaseResources() {
     azureReleaseVirtualNetworkInterfaces();
     azureReleasePublicIPs();
     azureReleaseNSGs();
+    currentposx.set(150);
+    currentposxmod.set(140);
+    currentposy.set(150);
 }
 
     // Sets the Azure subscription state amongst Svelte stores and other components.
@@ -358,13 +437,4 @@ export async function azureToggleResourcesState() {
 
 export function toggleAlertExpand(idx: any) {
     expandedAdvisorButtonIdx.set(expandedAdvisorButtonIdx === idx ? null : idx);
-}
-
-export async function azureToggleThreatModelActualState() {
-    if (get(threatModelGeneratedActual) == true) {
-        threatModelGeneratedActual.set(false);
-    } else {
-        threatModelGeneratedActual.set(true);
-    }
-    await tick();
 }

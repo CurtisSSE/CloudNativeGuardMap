@@ -84,7 +84,6 @@ export const nsgAttachedNIs = writable<string[]>([]);
 // Threat Model states
 export const threatModelButtonState = writable<boolean>(false);
 export const threatModelGeneratedState = writable<boolean>(false);
-export const threatModelGeneratedActual = writable<boolean>(false);
 
 // Threat Model ThreatProcess positions
 export const currentposxmod = writable<number>(150);
