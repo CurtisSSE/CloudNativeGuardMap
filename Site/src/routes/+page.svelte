@@ -6,13 +6,13 @@
     // Svelte stores for Virtual Machine states.
     import { operatingSystems, vmNames, adminUsernames, networkInterfaces, resGroups, osDisks, dataDisks } from "../stores/persistentsession.js";
     // Svelte stores for Virtual Network states.
-    import { vnNames, vnResGroups, vnIPAddresses, vnAddressPrefixes } from "../stores/persistentsession.js"
+    import { vnNames } from "../stores/persistentsession.js"
     // Svelte stores for Virtual Network Interface states.
-    import { vniNames, vniPrivateIPs, vniPublicIPIDs } from '../stores/persistentsession.js'
+    import { vniPrivateIPs } from '../stores/persistentsession.js'
     // Svelte stores for Public IP states.
-    import { pipPublicIPIDs, pipResGroups, actualPublicIPs } from '../stores/persistentsession.js';
+    import { actualPublicIPs } from '../stores/persistentsession.js';
     // Svelte stores for Network Security Group states.
-    import { nsgNames, nsgResGroups, nsgAttachedNIs } from '../stores/persistentsession.js';
+    import { nsgNames, nsgAttachedNIs } from '../stores/persistentsession.js';
     // Svelte stores for threat model.
     import { threatModelGeneratedState } from "../stores/persistentsession.js";
     // Svelte stores for current ThreatProcess x and y coordinates.
@@ -23,8 +23,6 @@
     import { selectedSubscriptionName, selectedSubscriptionID, subscriptionIsSelectedState, subscriptionButtonState, existingSubscriptions } from "../stores/persistentsession.js";
     // Import individual recommendation states.
     import { advisorRecommendationsGeneratedState, recExpandButton, zeroRecs, recName, recID, shortDesc, impactedField, impactfromAlert, impactedValue, expandedAdvisorButtonIdx, existingRecommendations} from "../stores/persistentsession.js";
-    // Import individual resources states.
-    import { resourcesGeneratedState } from "../stores/persistentsession.js";
 
     // Actual components.
 class ThreatProcess {
@@ -92,29 +90,29 @@ function generateVMSubFunction(ctx: CanvasRenderingContext2D) {
             ctx.textAlign = threatProcess.textAlign;
             ctx.textBaseline = threatProcess.textBaseline;
             ctx.fillStyle = threatProcess.fillStyle;
-            ctx.strokeText("VM: " + $vmNames[i], $currentposx + $currentposxmod, $currentposy, 200);
+            ctx.strokeText("VM: " + $vmNames[i], $currentposx + $currentposxmod, $currentposy - 15, 200);
             ctx.strokeStyle = "blue";
-            ctx.strokeText("OS: " + $operatingSystems[i], $currentposx + $currentposxmod, $currentposy - 50, 200);
+            ctx.strokeText("OS: " + $operatingSystems[i], $currentposx + $currentposxmod, $currentposy - 40, 200);
             ctx.strokeStyle = "black";
             if ($networkInterfaces[i] !== undefined && $networkInterfaces[i] !== null) {
                 ctx.strokeStyle = "green";
                 const NICstr = ($networkInterfaces[i].split("/")).slice(-1);
-                ctx.strokeText("NIC: " + NICstr, ($currentposx + $currentposxmod), $currentposy + 40, 200);
+                ctx.strokeText("NIC: " + NICstr, ($currentposx + $currentposxmod), $currentposy + 10, 200);
                 ctx.strokeStyle = "black";
             }
             if ($vniPrivateIPs[i] !== undefined && $vniPrivateIPs[i] !== null) {
                 ctx.strokeStyle = "black";
                 const PrivateIPstr = ($vniPrivateIPs[i])
-                ctx.strokeText("Private IP: " + PrivateIPstr, ($currentposx + $currentposxmod), $currentposy + 60, 200);
+                ctx.strokeText("Private IP:                " + PrivateIPstr, ($currentposx + $currentposxmod), $currentposy + 55, 200);
             }
             if ($actualPublicIPs[i] !== undefined && $actualPublicIPs[i] !== null) {
                 ctx.strokeStyle = "black";
                 const PublicIPstr = ($actualPublicIPs[i])
-                ctx.strokeText("Public IP: " + PublicIPstr, ($currentposx + $currentposxmod), $currentposy + 80, 200);
+                ctx.strokeText("Public IP:                " + PublicIPstr, ($currentposx + $currentposxmod), $currentposy + 80, 200);
             }
             if ($adminUsernames[i].includes("adm")) {
                 ctx.strokeStyle = "red";
-                ctx.strokeText("Weak ADM Username: " + $adminUsernames[i], ($currentposx + $currentposxmod), $currentposy + 60, 150);
+                ctx.strokeText("Weak ADM Username: " + $adminUsernames[i], ($currentposx + $currentposxmod), $currentposy + 30, 150);
                 ctx.strokeStyle = "black";
             }
             ctx.closePath();
@@ -133,7 +131,7 @@ function generateVMSubFunction(ctx: CanvasRenderingContext2D) {
                 ctx.lineTo($currentposx + $currentposxmod + 100, $currentposy + 100);
                 ctx.stroke();
                 ctx.textBaseline = threatDataStore.textBaseline;
-                ctx.strokeText("OS Disk: " + $osDisks[i], $currentposx + $currentposxmod, $currentposy + 140, 225);
+                ctx.strokeText("OS Disk: " + $osDisks[i].split("_")[0] + $osDisks[i].split("_")[1] + $osDisks[i].split("_")[2]+"...", $currentposx + $currentposxmod, $currentposy + 140, 225);
                 ctx.moveTo($currentposx + $currentposxmod - 100, $currentposy + 180);
                 ctx.lineTo($currentposx + $currentposxmod + 100, $currentposy + 180);
                 ctx.stroke();
