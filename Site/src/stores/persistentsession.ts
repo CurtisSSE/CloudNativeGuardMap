@@ -89,3 +89,6 @@ export const threatModelGeneratedState = writable<boolean>(false);
 export const currentposxmod = writable<number>(150);
 export const currentposx = writable<number>(140);
 export const currentposy = writable<number>(150);
+
+export const nsgcurrentposx = writable<number>(90);
+export const nsgcurrentposy = writable<number>(90);

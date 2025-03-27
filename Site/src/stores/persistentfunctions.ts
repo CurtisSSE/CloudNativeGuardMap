@@ -1,7 +1,7 @@
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 // Svelte auth related stores.
-import { currentposx, currentposxmod, currentposy, loggedInUser, subidfromGin } from '../stores/persistentsession.js';
+import { currentposx, currentposxmod, currentposy, loggedInUser, nsgcurrentposx, nsgcurrentposy, subidfromGin } from '../stores/persistentsession.js';
 // Svelte stores for threat model related variables.
 import { threatModelGeneratedState, threatModelButtonState } from "../stores/persistentsession.js"
 // Svelte stores for Virtual Machine states.
@@ -96,6 +96,8 @@ export async function azureLogout() {
         currentposxmod.set(150);
         currentposx.set(140);
         currentposy.set(150);      
+        nsgcurrentposx.set(90);
+        nsgcurrentposy.set(90);
     }
     await tick();
 }
@@ -327,6 +329,8 @@ export async function azureSetResourcePublicIPs() {
             pipResGroups.update(($pipResGroups) => [...$pipResGroups, pipShape[1]]);
             actualPublicIPs.update(($actualPublicIPs) => [...$actualPublicIPs, pipShape[2]]);
         }
+    } else {
+        zeroPIPs.set(true);
     }
 }
 
@@ -349,6 +353,8 @@ export async function azureSetResourceNSGs() {
             nsgResGroups.update(($nsgResGroups) => [...$nsgResGroups, nsgShape[1]]);
             nsgAttachedNIs.update(($nsgAttachedNIs) => [...$nsgAttachedNIs, nsgShape[2]]);
         }
+    } else {
+        zeroNSGs.set(true);
     }
 }
 

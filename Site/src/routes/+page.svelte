@@ -2,11 +2,8 @@
     // Import all persistent state functions.
     import * as FunctionPersist from "../stores/persistentfunctions.js"
     import { tick } from "svelte";
-    import { get } from "svelte/store"
     // Svelte stores for Virtual Machine states.
     import { operatingSystems, vmNames, adminUsernames, networkInterfaces, resGroups, osDisks, dataDisks } from "../stores/persistentsession.js";
-    // Svelte stores for Virtual Network states.
-    import { vnNames } from "../stores/persistentsession.js"
     // Svelte stores for Virtual Network Interface states.
     import { vniPrivateIPs } from '../stores/persistentsession.js'
     // Svelte stores for Public IP states.
@@ -16,13 +13,13 @@
     // Svelte stores for threat model.
     import { threatModelGeneratedState } from "../stores/persistentsession.js";
     // Svelte stores for current ThreatProcess x and y coordinates.
-    import { currentposxmod, currentposx, currentposy } from "../stores/persistentsession.js";
+    import { currentposxmod, currentposx, currentposy, nsgcurrentposx, nsgcurrentposy } from "../stores/persistentsession.js";
     // Import individual identity states.
     import { loggedInUser } from "../stores/persistentsession.js";
     // Import individual subscription states.
     import { selectedSubscriptionName, selectedSubscriptionID, subscriptionIsSelectedState, subscriptionButtonState, existingSubscriptions } from "../stores/persistentsession.js";
     // Import individual recommendation states.
-    import { advisorRecommendationsGeneratedState, recExpandButton, zeroRecs, recName, recID, shortDesc, impactedField, impactfromAlert, impactedValue, expandedAdvisorButtonIdx, existingRecommendations} from "../stores/persistentsession.js";
+    import { advisorRecommendationsGeneratedState, recExpandButton, zeroRecs, recName, recID, shortDesc, impactedField, impactfromAlert, impactedValue, expandedAdvisorButtonIdx} from "../stores/persistentsession.js";
 
     // Actual components.
 class ThreatProcess {
@@ -56,8 +53,6 @@ class ThreatTrustBoundary {
 
     readonly nsgTrustBoundaryHeight: number = 500;
     readonly nsgTrustBoundaryWidth: number = 400;
-    nsgTrustBoundaryPosx: number = 90;
-    nsgTrustBoundaryPosy: number = 90;
 
     readonly threatTrustBoundaryTextMaxWidth: number = 1000;
 }
@@ -70,18 +65,31 @@ let threatProcess = new ThreatProcess;
 let threatDataStore = new ThreatDataStore;
 let threatTrustBoundary = new ThreatTrustBoundary;
 
+function generateUserActorFunction(ctx: CanvasRenderingContext2D) {
+    if (ctx) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.strokeStyle = "black";
+        ctx.strokeRect(threatTrustBoundary.subscriptionTrustBoundaryPosx + 800, threatTrustBoundary.subscriptionTrustBoundaryPosy + 680, 125, 75);
+        ctx.font = threatProcess.font;
+        ctx.strokeText("Cloud User", threatTrustBoundary.subscriptionTrustBoundaryPosx + 802, threatTrustBoundary.subscriptionTrustBoundaryPosy + 725, 200);
+        ctx.closePath();
+        ctx.restore();
+    }
+}
+
 function generateVMSubFunction(ctx: CanvasRenderingContext2D) {
     if (ctx) {
         for (let i = 0; i < $vmNames.length; i++) {
             ctx.save();
-            if ($networkInterfaces[i].split(splitVarNetworkInterface)[1] === $nsgAttachedNIs[0].split(splitVarNetworkInterface)[1]) {
+            if ($networkInterfaces[i] && $nsgAttachedNIs[i] && $networkInterfaces[i].split(splitVarNetworkInterface)[1] === $nsgAttachedNIs[i].split(splitVarNetworkInterface)[1]) {
                 ctx.strokeStyle = threatTrustBoundary.strokeStyle;
                 ctx.setLineDash(threatTrustBoundary.setLineDash);
-                ctx.strokeRect(threatTrustBoundary.nsgTrustBoundaryPosx, threatTrustBoundary.nsgTrustBoundaryPosy, threatTrustBoundary.nsgTrustBoundaryWidth, threatTrustBoundary.nsgTrustBoundaryHeight);
+                ctx.strokeRect($nsgcurrentposx, $nsgcurrentposy, threatTrustBoundary.nsgTrustBoundaryWidth, threatTrustBoundary.nsgTrustBoundaryHeight);
                 ctx.setLineDash([]);
-                ctx.strokeText("Threat Boundary - Network Security Group: " + $nsgNames[0], threatTrustBoundary?.nsgTrustBoundaryPosx-10, threatTrustBoundary.nsgTrustBoundaryPosy-10, threatTrustBoundary.threatTrustBoundaryTextMaxWidth);
+                ctx.strokeText("Threat Boundary - Network Security Group: " + $nsgNames[i], $nsgcurrentposx-10, $nsgcurrentposy-10, threatTrustBoundary.threatTrustBoundaryTextMaxWidth);
                 ctx.strokeStyle = "black";
-                threatTrustBoundary.nsgTrustBoundaryPosx = (threatTrustBoundary.nsgTrustBoundaryPosx * 2)
+                nsgcurrentposx.set($nsgcurrentposx + $currentposx + ($currentposxmod * 2));
             }
             ctx.beginPath();
             ctx.arc($currentposx + $currentposxmod, $currentposy, threatProcess.radiusP3, threatProcess.radiusP4, threatProcess.radiusP5);
@@ -157,9 +165,8 @@ function generateVMSubFunction(ctx: CanvasRenderingContext2D) {
                 ctx.moveTo($currentposx + $currentposxmod - 100, $currentposy + 320);
                 ctx.lineTo($currentposx + $currentposxmod + 100, $currentposy + 320);
                 ctx.stroke();
-                }
-                currentposxmod.set($currentposxmod + $currentposxmod);
-                currentposx.set($currentposx + $currentposxmod);
+            }  
+                currentposx.set($currentposx + ($currentposxmod * 3));
                 currentposy.set($currentposy);
                 ctx.closePath();
                 ctx.restore();
@@ -170,6 +177,7 @@ function generateVMSubFunction(ctx: CanvasRenderingContext2D) {
 function generateThreatModelSubFunction(ctx: CanvasRenderingContext2D) {
     if (ctx) {
             generateVMSubFunction(ctx);
+            generateUserActorFunction(ctx);
     }
 }
 

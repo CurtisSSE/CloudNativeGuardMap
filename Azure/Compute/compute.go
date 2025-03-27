@@ -51,7 +51,7 @@ var VMqueryoptions *armresourcegraph.ClientResourcesOptions
 
 func GetAllVirtualMachines(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceFields map[int][]string) {
 	var currentResource VirtualMachine
-	VMquerytext := "Resources | where type =~ 'Microsoft.Compute/virtualMachines' | project name, resourceGroup, operatingSystem = (properties['extended']['instanceView']['osName']), operatingVersion = (properties['extended']['instanceView']['osVersion']), adminUsername = (properties['osProfile']['adminUsername']), networkProfile = (properties['networkProfile']['networkInterfaces']), osDisk = (properties['storageProfile']['osDisk']['name']), dataDisks = (properties['storageProfile']['dataDisks'])"
+	VMquerytext := "Resources | where type =~ 'Microsoft.Compute/virtualMachines' | sort by name | project name, resourceGroup, operatingSystem = (properties['extended']['instanceView']['osName']), operatingVersion = (properties['extended']['instanceView']['osVersion']), adminUsername = (properties['osProfile']['adminUsername']), networkProfile = (properties['networkProfile']['networkInterfaces']), osDisk = (properties['storageProfile']['osDisk']['name']), dataDisks = (properties['storageProfile']['dataDisks'])"
 	VMquery.Query = &VMquerytext
 	VMquery.Subscriptions = append(VMquery.Subscriptions, subscriptionid)
 	currentctx := context.Background()
@@ -71,7 +71,13 @@ func GetAllVirtualMachines(resourceclientvariable *armresourcegraph.Client, subs
 			//dataDiskCycle = string(rune(i))
 			currentResource.VMName = resourceumIter["name"].(string)
 			currentResource.ResGroup = resourceumIter["resourceGroup"].(string)
-			currentResource.OperatingSystem = resourceumIter["operatingSystem"].(string) + "-" + resourceumIter["operatingVersion"].(string)
+			if resourceumIter["operatingVersion"] != nil {
+				currentResource.OperatingSystem = resourceumIter["operatingSystem"].(string) + "-" + resourceumIter["operatingVersion"].(string)
+			} else if resourceumIter["operatingSystem"] != nil {
+				currentResource.OperatingSystem = resourceumIter["operatingSystem"].(string)
+			} else {
+				currentResource.OperatingSystem = "OS-unknown."
+			}
 			currentResource.AdminUsername = resourceumIter["adminUsername"].(string)
 			networkjsonProcessing, _ := json.Marshal(resourceumIter["networkProfile"])
 			var networkumData []map[string]interface{}
@@ -98,7 +104,7 @@ var NIqueryoptions *armresourcegraph.ClientResourcesOptions
 
 func GetAllVirtualNetworks(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceVNFields map[int][]string) {
 	var currentResourceVirtualNetwork VirtualNetwork
-	NIquerytext := "Resources | where type =~ 'Microsoft.Network/virtualNetworks' | project name, resourceGroup, ipAddress1 = (properties['subnets'][0]['properties']['ipConfigurations'][0]['id']), ipAddress2 = (properties['subnets'][0]['properties']['ipConfigurations'][1]['id']), addressPrefix = (properties['subnets'][0]['properties']['addressPrefix'])"
+	NIquerytext := "Resources | where type =~ 'Microsoft.Network/virtualNetworks' | sort by name | project name, resourceGroup, ipAddress1 = (properties['subnets'][0]['properties']['ipConfigurations'][0]['id']), ipAddress2 = (properties['subnets'][0]['properties']['ipConfigurations'][1]['id']), addressPrefix = (properties['subnets'][0]['properties']['addressPrefix'])"
 	NIquery.Query = &NIquerytext
 	NIquery.Subscriptions = append(NIquery.Subscriptions, subscriptionid)
 	currentctx := context.Background()
@@ -130,7 +136,7 @@ var VINqueryoptions *armresourcegraph.ClientResourcesOptions
 
 func GetAllVirtualNetworkInterfaces(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceVNIFields map[int][]string) {
 	var currentResourceVirtualNetworkInterface VirtualNetworkInterface
-	VINquerytext := "Resources | where type =~ 'Microsoft.Network/networkInterfaces' | project name, privateip = (properties['ipConfigurations'][0]['properties']['privateIPAddress']), resourceGroup, publicip = (properties['ipConfigurations'][0]['properties']['publicIPAddress']['id'])"
+	VINquerytext := "Resources | where type =~ 'Microsoft.Network/networkInterfaces' | sort by name | project name, privateip = (properties['ipConfigurations'][0]['properties']['privateIPAddress']), resourceGroup, publicip = (properties['ipConfigurations'][0]['properties']['publicIPAddress']['id'])"
 	VINquery.Query = &VINquerytext
 	VINquery.Subscriptions = append(VINquery.Subscriptions, subscriptionid)
 	currentctx := context.Background()
@@ -162,7 +168,7 @@ var PIPqueryoptions *armresourcegraph.ClientResourcesOptions
 
 func GetAllPublicIPs(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourcePIPFields map[int][]string) {
 	var currentResourcePublicIP PublicIPAttributes
-	PIPquerytext := "Resources | where type =~ 'Microsoft.Network/publicIPAddresses' | project id, resourceGroup, subscriptionId, actualip = (properties['ipAddress'])"
+	PIPquerytext := "Resources | where type =~ 'Microsoft.Network/publicIPAddresses' | sort by id | project id, resourceGroup, subscriptionId, actualip = (properties['ipAddress'])"
 	PIPquery.Query = &PIPquerytext
 	PIPquery.Subscriptions = append(PIPquery.Subscriptions, subscriptionid)
 	currentctx := context.Background()
@@ -193,7 +199,7 @@ var NSGqueryoptions *armresourcegraph.ClientResourcesOptions
 
 func GetAllNSGs(resourceclientvariable *armresourcegraph.Client, subscriptionid *string) (currentresourceNSGFields map[int][]string) {
 	var currentResourceNSG NetworkSecurityGroups
-	NSGquerytext := "where type =~ 'Microsoft.Network/networkSecurityGroups' | project name, resourceGroup, attachedinterface = (properties['networkInterfaces'][0]['id'])"
+	NSGquerytext := "where type =~ 'Microsoft.Network/networkSecurityGroups' | sort by name | project name, resourceGroup, attachedinterface = (properties['networkInterfaces'][0]['id'])"
 	NSGquery.Query = &NSGquerytext
 	NSGquery.Subscriptions = append(NSGquery.Subscriptions, subscriptionid)
 	currentctx := context.Background()

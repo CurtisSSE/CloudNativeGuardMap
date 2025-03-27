@@ -1,4 +1,4 @@
-<div class="pt-10 text-2xl leading-loose text-center">Threat model your cloud environment quickly and efficiently with a point-in-time analysis of your infrastructure and DevOps pipeline vulnerabilities.<br><br>
+<div class="pt-10 text-2xl leading-loose text-center">Threat model your cloud environment quickly and efficiently with a point-in-time analysis of your infrastructure threat landscape.<br><br>
 </div>
 <div class="text-2xl leading-loose text-center font-bold text-red-600">Disclaimer:<br><br>
 </div>
