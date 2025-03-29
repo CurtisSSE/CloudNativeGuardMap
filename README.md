@@ -1,0 +1,9 @@
+## University of Bath 2025 - Dissertation Project Prototype
+### Cloud Native Guard Map
+#### The automated threat modeling toolkit.
+
+Manual threat modeling takes time. It requires you to look over all of the assets you want to model.
+
+This application changes that and does the heavy lifting for you, as well as the lifting of the brush to a canvas to draw a perfectly aligned threat model.
+
+##### This is a dissertation project prototype. It works under the scenarios detailed in the 'Results' section of the dissertation and can only currently handle a single subscription, single nested resource group and as many VMs and NSGs fit on the canvas page.
