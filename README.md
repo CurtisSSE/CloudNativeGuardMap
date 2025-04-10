@@ -2,7 +2,7 @@
 ### Cloud Native Guard Map
 #### The automated threat modeling toolkit.
 
-#### Demo video can be found here: https://1drv.ms/v/c/4a764f8c7387a09c/EVa7iLWBspJKnmJ9udjMznUBwdp0eQxG0z4zGo3kbxIHEw?e=mUnRQe
+#### Demo video can be found here: https://1drv.ms/v/c/4a764f8c7387a09c/Ea92E_I7XExHl4O_8uCPAfkBCmGs16JnaFu9Ne2JSTwgJg?e=9TZuEM
 
 Manual threat modeling takes time. It requires you to look over all of the assets you want to model.
 
