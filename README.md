@@ -21,5 +21,3 @@ This application changes that and does the heavy lifting for you, as well as the
 **Frontend**: From within the /CloudNativeGuardMap/Site repository, run **npm run dev**
 
 **DO NOT RUN USING PRODUCTION CREDENTIALS, OR AZURE CREDENTIALS FOR ANY LIVE ENVIRONMENT WITH PII OR SENSITIVE DATA OF ANY KIND. THIS PROJECT IS ONLY SUITABLE FOR PURPOSE-BUILT DEVELOPMENT ENVIRONMENTS.**
-
-# curtissse.github.io
